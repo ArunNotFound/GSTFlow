@@ -220,6 +220,12 @@ export default function App() {
           )}
         </div>
       </main>
+
+      {/* Legal Footer */}
+      <footer className="px-6 py-3 border-t border-gray-800 bg-gray-900/50 backdrop-blur-md text-xs text-gray-500 text-center flex-shrink-0">
+        <span className="font-bold text-red-400/80">⚠️ LEGAL DISCLAIMER:</span> THIS IS NOT TAX ADVICE. GSTFlow takes zero liability for your GSTR-1 filings, penalties, or disputes. 
+        You are solely responsible for verifying accuracy before filing with the Government of India portal.
+      </footer>
     </div>
   );
 }
