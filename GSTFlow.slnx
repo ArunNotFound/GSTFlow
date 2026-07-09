@@ -7,4 +7,5 @@
   <Project Path="GSTFlow.Reconcile/GSTFlow.Reconcile.fsproj" />
   <Project Path="GSTFlow.Rules/GSTFlow.Rules.fsproj" />
   <Project Path="GSTFlow.Verify/GSTFlow.Verify.fsproj" />
+  <Project Path="GSTFlow.Wasm/GSTFlow.Wasm.fsproj" />
 </Solution>

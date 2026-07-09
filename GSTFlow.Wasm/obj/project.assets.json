@@ -2,6 +2,29 @@
   "version": 4,
   "targets": {
     "net10.0": {
+      "Fable.Core/5.0.0": {
+        "type": "package",
+        "dependencies": {
+          "FSharp.Core": "4.7.2"
+        },
+        "compile": {
+          "lib/netstandard2.0/Fable.Core.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/Fable.Core.dll": {
+            "related": ".xml"
+          }
+        },
+        "contentFiles": {
+          "contentFiles/any/netstandard2.0/CHANGELOG.md": {
+            "buildAction": "Content",
+            "codeLanguage": "any",
+            "copyToOutput": false
+          }
+        }
+      },
       "FSharp.Core/10.1.301": {
         "type": "package",
         "compile": {
@@ -56,6 +79,23 @@
           }
         }
       },
+      "Thoth.Json/10.5.1": {
+        "type": "package",
+        "dependencies": {
+          "FSharp.Core": "10.1.203",
+          "Fable.Core": "5.0.0"
+        },
+        "compile": {
+          "lib/netstandard2.0/Thoth.Json.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/Thoth.Json.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "GSTFlow.Core/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v10.0",
@@ -67,6 +107,21 @@
         },
         "runtime": {
           "bin/placeholder/GSTFlow.Core.dll": {}
+        }
+      },
+      "GSTFlow.Emit/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "dependencies": {
+          "FSharp.Core": "10.1.301",
+          "GSTFlow.Core": "1.0.0",
+          "GSTFlow.Rules": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/GSTFlow.Emit.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/GSTFlow.Emit.dll": {}
         }
       },
       "GSTFlow.Rules/1.0.0": {
@@ -86,6 +141,24 @@
     }
   },
   "libraries": {
+    "Fable.Core/5.0.0": {
+      "sha512": "pJOXJjfhjvNa1cgtF+klgR3DxQI7x9D/fFzZbjUBZLBJyYIioPsTFsKUnIOqNdCq1Oby9lINUSwnL4TqspMQOA==",
+      "type": "package",
+      "path": "fable.core/5.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE",
+        "README.md",
+        "content/CHANGELOG.md",
+        "contentFiles/any/netstandard2.0/CHANGELOG.md",
+        "fable.core.5.0.0.nupkg.sha512",
+        "fable.core.nuspec",
+        "fable_logo.png",
+        "lib/netstandard2.0/Fable.Core.dll",
+        "lib/netstandard2.0/Fable.Core.xml"
+      ]
+    },
     "FSharp.Core/10.1.301": {
       "sha512": "FwQFuqOA1+qQnFl6Vqg6piS83ZRuKJqXJQxOM52M5tNarT2XQ/pMvw8fOOlnhcOYvdZyje2PJ8rK/J64ZI729Q==",
       "type": "package",
@@ -128,10 +201,35 @@
         "lib/netstandard2.1/zh-Hant/FSharp.Core.resources.dll"
       ]
     },
+    "Thoth.Json/10.5.1": {
+      "sha512": "HMh+zRyOhz7ASGNLgcSQFsrZWv4mcMZfqIsya0aQ2ixFWZpav9RRvYR5C9tL33qmRDX4n+73Bpo6brSfUQ4nQA==",
+      "type": "package",
+      "path": "thoth.json/10.5.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.txt",
+        "README.md",
+        "fable/Decode.fs",
+        "fable/Encode.fs",
+        "fable/Extra.fs",
+        "fable/Thoth.Json.fsproj",
+        "fable/Types.fs",
+        "lib/netstandard2.0/Thoth.Json.dll",
+        "lib/netstandard2.0/Thoth.Json.xml",
+        "thoth.json.10.5.1.nupkg.sha512",
+        "thoth.json.nuspec"
+      ]
+    },
     "GSTFlow.Core/1.0.0": {
       "type": "project",
       "path": "../GSTFlow.Core/GSTFlow.Core.fsproj",
       "msbuildProject": "../GSTFlow.Core/GSTFlow.Core.fsproj"
+    },
+    "GSTFlow.Emit/1.0.0": {
+      "type": "project",
+      "path": "../GSTFlow.Emit/GSTFlow.Emit.fsproj",
+      "msbuildProject": "../GSTFlow.Emit/GSTFlow.Emit.fsproj"
     },
     "GSTFlow.Rules/1.0.0": {
       "type": "project",
@@ -142,8 +240,11 @@
   "projectFileDependencyGroups": {
     "net10.0": [
       "FSharp.Core >= 10.1.301",
+      "Fable.Core >= 5.0.0",
       "GSTFlow.Core >= 1.0.0",
-      "GSTFlow.Rules >= 1.0.0"
+      "GSTFlow.Emit >= 1.0.0",
+      "GSTFlow.Rules >= 1.0.0",
+      "Thoth.Json >= 10.5.1"
     ]
   },
   "packageFolders": {
@@ -152,11 +253,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/root/repos/github/fsharp/GSTFlow/GSTFlow.Emit/GSTFlow.Emit.fsproj",
-      "projectName": "GSTFlow.Emit",
-      "projectPath": "/root/repos/github/fsharp/GSTFlow/GSTFlow.Emit/GSTFlow.Emit.fsproj",
+      "projectUniqueName": "/root/repos/github/fsharp/GSTFlow/GSTFlow.Wasm/GSTFlow.Wasm.fsproj",
+      "projectName": "GSTFlow.Wasm",
+      "projectPath": "/root/repos/github/fsharp/GSTFlow/GSTFlow.Wasm/GSTFlow.Wasm.fsproj",
       "packagesPath": "/root/.nuget/packages/",
-      "outputPath": "/root/repos/github/fsharp/GSTFlow/GSTFlow.Emit/obj/",
+      "outputPath": "/root/repos/github/fsharp/GSTFlow/GSTFlow.Wasm/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/root/.nuget/NuGet/NuGet.Config"
@@ -175,6 +276,9 @@
           "projectReferences": {
             "/root/repos/github/fsharp/GSTFlow/GSTFlow.Core/GSTFlow.Core.fsproj": {
               "projectPath": "/root/repos/github/fsharp/GSTFlow/GSTFlow.Core/GSTFlow.Core.fsproj"
+            },
+            "/root/repos/github/fsharp/GSTFlow/GSTFlow.Emit/GSTFlow.Emit.fsproj": {
+              "projectPath": "/root/repos/github/fsharp/GSTFlow/GSTFlow.Emit/GSTFlow.Emit.fsproj"
             },
             "/root/repos/github/fsharp/GSTFlow/GSTFlow.Rules/GSTFlow.Rules.fsproj": {
               "projectPath": "/root/repos/github/fsharp/GSTFlow/GSTFlow.Rules/GSTFlow.Rules.fsproj"
@@ -202,6 +306,16 @@
             "include": "Runtime, Compile, Build, Native, Analyzers, BuildTransitive",
             "target": "Package",
             "version": "[10.1.301, )",
+            "generatePathProperty": true
+          },
+          "Fable.Core": {
+            "target": "Package",
+            "version": "[5.0.0, )",
+            "generatePathProperty": true
+          },
+          "Thoth.Json": {
+            "target": "Package",
+            "version": "[10.5.1, )",
             "generatePathProperty": true
           }
         },

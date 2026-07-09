@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "ThyYKH47FBk=",
+  "success": true,
+  "projectFilePath": "/root/repos/github/fsharp/GSTFlow/GSTFlow.Wasm/GSTFlow.Wasm.fsproj",
+  "expectedPackageFiles": [
+    "/root/.nuget/packages/fable.core/5.0.0/fable.core.5.0.0.nupkg.sha512",
+    "/root/.nuget/packages/fsharp.core/10.1.301/fsharp.core.10.1.301.nupkg.sha512",
+    "/root/.nuget/packages/thoth.json/10.5.1/thoth.json.10.5.1.nupkg.sha512"
+  ],
+  "logs": []
+}
