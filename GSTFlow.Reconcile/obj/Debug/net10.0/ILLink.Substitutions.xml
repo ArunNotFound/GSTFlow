@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<linker>
+  <assembly fullname="GSTFlow.Reconcile">
+    <resource name="FSharpSignatureData.GSTFlow.Reconcile" action="remove"></resource>
+    <resource name="FSharpSignatureCompressedData.GSTFlow.Reconcile" action="remove"></resource>
+    <resource name="FSharpSignatureDataB.GSTFlow.Reconcile" action="remove"></resource>
+    <resource name="FSharpSignatureCompressedDataB.GSTFlow.Reconcile" action="remove"></resource>
+    <resource name="FSharpOptimizationData.GSTFlow.Reconcile" action="remove"></resource>
+    <resource name="FSharpOptimizationCompressedData.GSTFlow.Reconcile" action="remove"></resource>
+    <resource name="FSharpOptimizationDataB.GSTFlow.Reconcile" action="remove"></resource>
+    <resource name="FSharpOptimizationCompressedDataB.GSTFlow.Reconcile" action="remove"></resource>
+    <resource name="FSharpOptimizationInfo.GSTFlow.Reconcile" action="remove"></resource>
+    <resource name="FSharpSignatureInfo.GSTFlow.Reconcile" action="remove"></resource>
+  </assembly>
+</linker>

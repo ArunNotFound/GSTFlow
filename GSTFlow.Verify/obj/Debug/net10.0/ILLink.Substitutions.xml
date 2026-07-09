@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<linker>
+  <assembly fullname="GSTFlow.Verify">
+    <resource name="FSharpSignatureData.GSTFlow.Verify" action="remove"></resource>
+    <resource name="FSharpSignatureCompressedData.GSTFlow.Verify" action="remove"></resource>
+    <resource name="FSharpSignatureDataB.GSTFlow.Verify" action="remove"></resource>
+    <resource name="FSharpSignatureCompressedDataB.GSTFlow.Verify" action="remove"></resource>
+    <resource name="FSharpOptimizationData.GSTFlow.Verify" action="remove"></resource>
+    <resource name="FSharpOptimizationCompressedData.GSTFlow.Verify" action="remove"></resource>
+    <resource name="FSharpOptimizationDataB.GSTFlow.Verify" action="remove"></resource>
+    <resource name="FSharpOptimizationCompressedDataB.GSTFlow.Verify" action="remove"></resource>
+    <resource name="FSharpOptimizationInfo.GSTFlow.Verify" action="remove"></resource>
+    <resource name="FSharpSignatureInfo.GSTFlow.Verify" action="remove"></resource>
+  </assembly>
+</linker>

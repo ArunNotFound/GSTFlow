@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<linker>
+  <assembly fullname="GSTFlow.Adapters">
+    <resource name="FSharpSignatureData.GSTFlow.Adapters" action="remove"></resource>
+    <resource name="FSharpSignatureCompressedData.GSTFlow.Adapters" action="remove"></resource>
+    <resource name="FSharpSignatureDataB.GSTFlow.Adapters" action="remove"></resource>
+    <resource name="FSharpSignatureCompressedDataB.GSTFlow.Adapters" action="remove"></resource>
+    <resource name="FSharpOptimizationData.GSTFlow.Adapters" action="remove"></resource>
+    <resource name="FSharpOptimizationCompressedData.GSTFlow.Adapters" action="remove"></resource>
+    <resource name="FSharpOptimizationDataB.GSTFlow.Adapters" action="remove"></resource>
+    <resource name="FSharpOptimizationCompressedDataB.GSTFlow.Adapters" action="remove"></resource>
+    <resource name="FSharpOptimizationInfo.GSTFlow.Adapters" action="remove"></resource>
+    <resource name="FSharpSignatureInfo.GSTFlow.Adapters" action="remove"></resource>
+  </assembly>
+</linker>

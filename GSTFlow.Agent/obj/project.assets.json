@@ -55,6 +55,33 @@
             "locale": "zh-Hant"
           }
         }
+      },
+      "GSTFlow.Core/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "dependencies": {
+          "FSharp.Core": "10.1.301"
+        },
+        "compile": {
+          "bin/placeholder/GSTFlow.Core.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/GSTFlow.Core.dll": {}
+        }
+      },
+      "GSTFlow.Rules/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "dependencies": {
+          "FSharp.Core": "10.1.301",
+          "GSTFlow.Core": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/GSTFlow.Rules.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/GSTFlow.Rules.dll": {}
+        }
       }
     }
   },
@@ -100,11 +127,23 @@
         "lib/netstandard2.1/zh-Hans/FSharp.Core.resources.dll",
         "lib/netstandard2.1/zh-Hant/FSharp.Core.resources.dll"
       ]
+    },
+    "GSTFlow.Core/1.0.0": {
+      "type": "project",
+      "path": "../GSTFlow.Core/GSTFlow.Core.fsproj",
+      "msbuildProject": "../GSTFlow.Core/GSTFlow.Core.fsproj"
+    },
+    "GSTFlow.Rules/1.0.0": {
+      "type": "project",
+      "path": "../GSTFlow.Rules/GSTFlow.Rules.fsproj",
+      "msbuildProject": "../GSTFlow.Rules/GSTFlow.Rules.fsproj"
     }
   },
   "projectFileDependencyGroups": {
     "net10.0": [
-      "FSharp.Core >= 10.1.301"
+      "FSharp.Core >= 10.1.301",
+      "GSTFlow.Core >= 1.0.0",
+      "GSTFlow.Rules >= 1.0.0"
     ]
   },
   "packageFolders": {
@@ -133,7 +172,14 @@
         "net10.0": {
           "framework": "net10.0",
           "targetAlias": "net10.0",
-          "projectReferences": {}
+          "projectReferences": {
+            "/root/repos/github/fsharp/GSTFlow/GSTFlow.Core/GSTFlow.Core.fsproj": {
+              "projectPath": "/root/repos/github/fsharp/GSTFlow/GSTFlow.Core/GSTFlow.Core.fsproj"
+            },
+            "/root/repos/github/fsharp/GSTFlow/GSTFlow.Rules/GSTFlow.Rules.fsproj": {
+              "projectPath": "/root/repos/github/fsharp/GSTFlow/GSTFlow.Rules/GSTFlow.Rules.fsproj"
+            }
+          }
         }
       },
       "restoreAuditProperties": {
