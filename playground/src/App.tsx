@@ -35,6 +35,8 @@ export default function App() {
   let proof = '';
   let err = '';
   
+  let violations: any[] = [];
+  
   try {
       const res = compileInvoice(jsonInput);
       if (res.success) {
@@ -42,6 +44,7 @@ export default function App() {
           proof = res.proof;
       } else {
           err = res.error;
+          violations = res.violations || [];
       }
   } catch (e: any) {
       err = e.message;
@@ -76,7 +79,7 @@ export default function App() {
         {/* Right Panel: Output */}
         <div className="w-1/2 flex flex-col bg-[#0d1117] overflow-y-auto">
           {err ? (
-             <div className="p-8">
+             <div className="p-8 space-y-6">
                <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-6 shadow-xl">
                  <h2 className="text-red-400 font-semibold mb-2 flex items-center">
                    <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -84,6 +87,22 @@ export default function App() {
                  </h2>
                  <pre className="text-sm text-red-300/80 whitespace-pre-wrap font-mono">{err}</pre>
                </div>
+               {violations.length > 0 && (
+                 <div className="bg-orange-900/20 border border-orange-500/30 rounded-xl p-6 shadow-xl">
+                   <h2 className="text-orange-400 font-semibold mb-4 flex items-center">
+                     <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                     Rule Violations ({violations.length})
+                   </h2>
+                   <div className="space-y-3">
+                     {violations.map((v, i) => (
+                       <div key={i} className="p-3 bg-gray-800/50 rounded-lg border border-gray-700">
+                         <div className="text-xs text-orange-300 font-mono mb-1">{v.Rule}</div>
+                         <div className="text-sm text-gray-300">{v.Description}</div>
+                       </div>
+                     ))}
+                   </div>
+                 </div>
+               )}
              </div>
           ) : (
             <div className="p-8 space-y-8">

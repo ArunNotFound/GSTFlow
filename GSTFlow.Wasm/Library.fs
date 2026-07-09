@@ -8,24 +8,35 @@ open GSTFlow.Rules
 open GSTFlow.Emit
 
 let compileInvoice (jsonString: string) : obj =
-    // Thoth Decoder for MVP
-    let decodeInvoice = Decode.Auto.fromString<Invoice>(jsonString)
+    // Decode into RawInvoice instead of validated Invoice
+    let decodeInvoice = Decode.Auto.fromString<RawInvoice>(jsonString)
     match decodeInvoice with
-    | Ok invoice ->
-        let ir = Compiler.normalize invoice
-        let gstr1 = Generators.emitGstr1Json ir
-        let proof = Generators.emitProofReport ir
-        
-        {|
-            success = true
-            gstr1 = gstr1
-            proof = proof
-            error = null
-        |} |> box
+    | Ok rawInvoice ->
+        let result = Compiler.compile rawInvoice
+        match result.IR with
+        | Some ir ->
+            let gstr1 = Generators.emitGstr1Json ir
+            let proof = Generators.emitProofReport ir
+            {|
+                success = true
+                gstr1 = gstr1
+                proof = proof
+                violations = result.Violations |> Array.ofList
+                error = null
+            |} |> box
+        | None ->
+            {|
+                success = false
+                gstr1 = null
+                proof = null
+                violations = result.Violations |> Array.ofList
+                error = "Validation failed"
+            |} |> box
     | Error err ->
         {|
             success = false
             gstr1 = null
             proof = null
+            violations = [||]
             error = err
         |} |> box

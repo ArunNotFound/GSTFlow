@@ -1,7 +1,52 @@
 namespace GSTFlow.Core
 
+open System
+open System.Text.RegularExpressions
+
 type StateCode = string
-type GSTIN = string
+
+module GstinValidation =
+    let charToValue (c: char) =
+        if Char.IsDigit(c) then int c - int '0'
+        elif Char.IsLetter(c) then int (Char.ToUpper(c)) - int 'A' + 10
+        else failwith "Invalid character"
+
+    let valueToChar (v: int) =
+        if v < 10 then char (v + int '0')
+        else char (v - 10 + int 'A')
+
+    let calculateCheckDigit (gstinWithoutCheck: string) =
+        let factor = 2
+        let sum =
+            gstinWithoutCheck.ToCharArray()
+            |> Array.mapi (fun i c ->
+                let value = charToValue c
+                let product = value * (if i % 2 = 0 then 1 else 2)
+                (product / 36) + (product % 36))
+            |> Array.sum
+        let remainder = sum % 36
+        let checkDigitValue = if remainder = 0 then 0 else 36 - remainder
+        valueToChar checkDigitValue
+
+    let isValid (gstin: string) =
+        if gstin.Length <> 15 then false
+        else
+            let pattern = "^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$"
+            if not (Regex.IsMatch(gstin, pattern)) then false
+            else
+                try
+                    let checkDigit = calculateCheckDigit (gstin.Substring(0, 14))
+                    checkDigit = gstin.[14]
+                with _ -> false
+
+type GSTIN = private GSTIN of string
+
+module GSTIN =
+    let create (str: string) =
+        if GstinValidation.isValid str then Ok (GSTIN str)
+        else Error "Invalid GSTIN format or checksum"
+        
+    let value (GSTIN str) = str
 
 type Party = {
     Gstin: GSTIN

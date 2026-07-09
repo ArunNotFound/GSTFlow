@@ -1,32 +1,50 @@
 
 import { Auto_generateBoxedDecoder_Z6670B51, fromString } from "./fable_modules/Thoth.Json.10.5.1/Decode.fs.js";
-import { defaultOf, uncurry2 } from "./fable_modules/fable-library-ts.5.6.0/Util.ts";
-import { GSTCanonicalIR, Invoice, Invoice_$reflection } from "./GSTFlow.Core/Library.ts";
+import { MutableArray, defaultOf, uncurry2 } from "./fable_modules/fable-library-ts.5.6.0/Util.ts";
+import { RuleViolation, CompilationResult, Compiler_compile, RawInvoice, RawInvoice_$reflection } from "./GSTFlow.Rules/Library.ts";
 import { FSharpResult$2_$union } from "./fable_modules/fable-library-ts.5.6.0/Result.ts";
 import { int32 } from "./fable_modules/fable-library-ts.5.6.0/Int32.ts";
-import { normalize } from "./GSTFlow.Rules/Library.ts";
+import { value as value_3, Option } from "./fable_modules/fable-library-ts.5.6.0/Option.ts";
+import { GSTCanonicalIR } from "./GSTFlow.Core/Library.ts";
+import { toArray } from "./fable_modules/fable-library-ts.5.6.0/List.ts";
 import { emitProofReport, emitGstr1Json } from "./GSTFlow.Emit/Library.ts";
 
 export function compileInvoice(jsonString: string): any {
-    const decodeInvoice: FSharpResult$2_$union<Invoice, string> = fromString<Invoice>(uncurry2(Auto_generateBoxedDecoder_Z6670B51(Invoice_$reflection(), undefined, undefined)), jsonString);
+    let violations: MutableArray<RuleViolation> = undefined as any;
+    const decodeInvoice: FSharpResult$2_$union<RawInvoice, string> = fromString<RawInvoice>(uncurry2(Auto_generateBoxedDecoder_Z6670B51(RawInvoice_$reflection(), undefined, undefined)), jsonString);
     if ((decodeInvoice.tag as int32) === /* Error */ 1) {
         return {
             error: decodeInvoice.fields[0] as string,
             gstr1: defaultOf(),
             proof: defaultOf(),
             success: false,
+            violations: [],
         };
     }
     else {
-        const ir: GSTCanonicalIR = normalize(decodeInvoice.fields[0] as Invoice);
-        const gstr1: string = emitGstr1Json(ir);
-        const proof: string = emitProofReport(ir);
-        return {
-            error: defaultOf(),
-            gstr1: gstr1,
-            proof: proof,
-            success: true,
-        };
+        const result: CompilationResult = Compiler_compile(decodeInvoice.fields[0] as RawInvoice);
+        const matchValue: Option<GSTCanonicalIR> = result.IR;
+        if (matchValue == null) {
+            return {
+                error: "Validation failed",
+                gstr1: defaultOf(),
+                proof: defaultOf(),
+                success: false,
+                violations: toArray<RuleViolation>(result.Violations),
+            };
+        }
+        else {
+            const ir: GSTCanonicalIR = value_3(matchValue);
+            const gstr1: string = emitGstr1Json(ir);
+            const proof: string = emitProofReport(ir);
+            return (violations = toArray<RuleViolation>(result.Violations), {
+                error: defaultOf(),
+                gstr1: gstr1,
+                proof: proof,
+                success: true,
+                violations: violations,
+            });
+        }
     }
 }
 
