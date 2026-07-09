@@ -29,6 +29,9 @@ jobs:
     - name: Build F# Solution
       run: dotnet build --no-restore
 
+    - name: Run Mathematical Laws (FsCheck Property Tests)
+      run: dotnet test GSTFlow.Tests
+
     - name: Run CLI Tests (NativeAOT mode verification)
       run: |
         echo "Testing Fixture 1"
@@ -37,6 +40,12 @@ jobs:
         dotnet run --project GSTFlow.Cli/GSTFlow.Cli.fsproj -- --validate fixtures/fixture_2_intrastate_b2c.json
         echo "Testing Fixture 3 (Falsifier - expected to fail)"
         dotnet run --project GSTFlow.Cli/GSTFlow.Cli.fsproj -- --validate fixtures/fixture_3_falsifier.json || true
+        echo "Testing Fixture 4 (Bad GSTIN Checksum)"
+        dotnet run --project GSTFlow.Cli/GSTFlow.Cli.fsproj -- --validate fixtures/fixture_4_bad_check_character.json || true
+        echo "Testing Fixture 5 (Both IGST and CGST - illegal)"
+        dotnet run --project GSTFlow.Cli/GSTFlow.Cli.fsproj -- --validate fixtures/fixture_5_both_taxes.json || true
+        echo "Testing Fixture 6 (Off Slab)"
+        dotnet run --project GSTFlow.Cli/GSTFlow.Cli.fsproj -- --validate fixtures/fixture_6_off_slab.json || true
 
     - name: Restore Local Tools (Fable)
       run: dotnet tool restore
