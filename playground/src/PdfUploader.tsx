@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
 import { UploadCloud, FileText, CheckCircle2 } from 'lucide-react';
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Use a CDN for the worker to avoid Vite build configuration headaches
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
 
 export default function PdfUploader({ onExtract }: { onExtract: (extractedData: any) => void }) {
   const [isExtracting, setIsExtracting] = useState(false);
@@ -11,27 +15,47 @@ export default function PdfUploader({ onExtract }: { onExtract: (extractedData: 
 
     setIsExtracting(true);
     setStatus('Loading PDF via pdf.js...');
-    
-    // TODO: Phase P1 - Real pdf.js + Tesseract.js integration goes here.
-    // For scaffolding, we simulate the extraction pipeline delay.
-    setTimeout(() => {
-      setStatus('Running OCR heuristics (Tesseract.js)...');
-      setTimeout(() => {
-        setStatus('Mapping extracted text to GST fields...');
-        setTimeout(() => {
-          setIsExtracting(false);
-          setStatus('');
-          // Return a messy/guessed data structure for the confirmation screen
-          onExtract({
-            Seller: { Gstin: "29ABCDE1234F1Z5", confidence: 0.95 },
-            Buyer: { Gstin: "33PQRSX9876L1Z2", confidence: 0.8 },
-            Items: [
-              { Hsn: "847130", TaxableValue: 100000, GstRate: 18, Tax: { Igst: 18000, Cgst: 0, Sgst: 0 }, confidence: 0.7 }
-            ]
-          });
-        }, 800);
-      }, 1000);
-    }, 800);
+
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      
+      setStatus(`Extracting text from ${pdf.numPages} pages...`);
+      let fullText = "";
+      
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items.map((item: any) => item.str).join(" ");
+        fullText += pageText + " ";
+      }
+
+      setStatus('Mapping extracted text to GST fields...');
+      
+      // Phase P2: Heuristics Regex
+      const gstinRegex = /\b[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}\b/g;
+      const gstins = [...new Set(fullText.match(gstinRegex) || [])];
+
+      const sellerGstin = gstins.length > 0 ? gstins[0] : "NOT_FOUND";
+      const buyerGstin = gstins.length > 1 ? gstins[1] : "NOT_FOUND";
+
+      setIsExtracting(false);
+      setStatus('');
+
+      onExtract({
+        Seller: { Gstin: sellerGstin, confidence: sellerGstin !== "NOT_FOUND" ? 0.9 : 0.0 },
+        Buyer: { Gstin: buyerGstin, confidence: buyerGstin !== "NOT_FOUND" ? 0.7 : 0.0 },
+        Items: [
+          // Fallback dummy item for now until full tabular extraction is built
+          { Hsn: "847130", TaxableValue: 100000, GstRate: 18, Tax: { Igst: 18000, Cgst: 0, Sgst: 0 }, confidence: 0.5 }
+        ]
+      });
+
+    } catch (err) {
+      console.error(err);
+      setStatus('Failed to extract PDF.');
+      setIsExtracting(false);
+    }
   };
 
   return (
