@@ -1,0 +1,111 @@
+module GSTFlow.Tests
+
+open System
+open Xunit
+open FsCheck
+open FsCheck.Xunit
+open GSTFlow.Core
+open GSTFlow.Rules
+
+// ---------------------------------------------------------
+// 1. GSTIN Structural Laws
+// ---------------------------------------------------------
+
+let isValidGstinFormat (s: string) =
+    System.Text.RegularExpressions.Regex.IsMatch(s, @"^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$")
+
+[<Property>]
+let ``Law: GSTIN creation is pure identity for valid strings`` (s: string) =
+    if not (String.IsNullOrWhiteSpace s) && isValidGstinFormat s then
+        match GSTIN.create s with
+        | Ok gstin -> GSTIN.value gstin = s
+        | Error _ -> true
+    else true
+
+[<Fact>]
+let ``Law: Falsifier - Flipping any character in a valid GSTIN invalidates the checksum`` () =
+    let validGstin = "27AAPFU0939F1ZV"
+    let okRes = GSTIN.create validGstin
+    Assert.True(Result.isOk okRes, "Canonical GSTIN must pass")
+
+    let chars = validGstin.ToCharArray()
+    let mutable allFailed = true
+    for i in 0 .. chars.Length - 1 do
+        let original = chars.[i]
+        let flipped = if original = 'A' then 'B' elif original = '5' then '6' else 'A'
+        chars.[i] <- flipped
+        let mutated = new string(chars)
+        if mutated <> validGstin then
+            match GSTIN.create mutated with
+            | Ok _ -> allFailed <- false
+            | Error _ -> ()
+        chars.[i] <- original
+    
+    Assert.True(allFailed, "Any single character mutation MUST invalidate the GSTIN")
+
+
+// ---------------------------------------------------------
+// 2. Tax Semantic Laws
+// ---------------------------------------------------------
+
+let createDummyInvoice (sellerGstin: string) (sellerState: string) (buyerGstin: string option) (buyerState: string option) (igst: decimal) (cgst: decimal) (sgst: decimal) =
+    {
+        InvoiceNumber = "TEST-001"
+        InvoiceDate = "2026-01-01"
+        Seller = { Gstin = sellerGstin; StateCode = sellerState }
+        Buyer = 
+            match buyerGstin, buyerState with
+            | Some bg, Some state -> Some { Gstin = bg; StateCode = state }
+            | _ -> None
+        Items = [
+            {
+                Hsn = "000000"
+                TaxableValue = 100m
+                GstRate = 18m
+                Tax = { Igst = igst; Cgst = cgst; Sgst = sgst }
+            }
+        ]
+    }
+
+// Valid GSTINs: 29AAGCB7383J1Z4 (Karnataka - 29), 27AAPFU0939F1ZV (Maharashtra - 27)
+
+[<Property>]
+let ``Law: Interstate supply must absolutely reject local taxes`` (cgst: float) (sgst: float) =
+    if Double.IsNaN(cgst) || Double.IsInfinity(cgst) || Double.IsNaN(sgst) || Double.IsInfinity(sgst) || Math.Abs(cgst) > 1000000000.0 || Math.Abs(sgst) > 1000000000.0 then true else
+    let cgstVal = decimal (Math.Abs(cgst))
+    let sgstVal = decimal (Math.Abs(sgst))
+    
+    // Interstate (Seller 29, Buyer 27)
+    let raw = createDummyInvoice "29AAGCB7383J1Z4" "29" (Some "27AAPFU0939F1ZV") (Some "27") 18m cgstVal sgstVal
+    let result = Compiler.compile raw
+    
+    if cgstVal > 0m || sgstVal > 0m then
+        result.Violations |> List.exists (fun v -> v.Rule = "IGST_CGST_LAW")
+    else true
+
+[<Property>]
+let ``Law: Intrastate supply must absolutely reject integrated tax`` (igst: float) =
+    if Double.IsNaN(igst) || Double.IsInfinity(igst) || Math.Abs(igst) > 1000000000.0 then true else
+    let igstVal = decimal (Math.Abs(igst))
+    
+    // Intrastate (Seller 29, Buyer 29)
+    let raw = createDummyInvoice "29AAGCB7383J1Z4" "29" (Some "29AAGCB7383J1Z4") (Some "29") igstVal 9m 9m
+    let result = Compiler.compile raw
+    
+    if igstVal > 0m then
+        result.Violations |> List.exists (fun v -> v.Rule = "IGST_CGST_LAW")
+    else true
+
+[<Property>]
+let ``Law: B2C supply implicitly binds Place Of Supply to Seller State (Intrastate)`` (igst: float) =
+    if Double.IsNaN(igst) || Double.IsInfinity(igst) || Math.Abs(igst) > 1000000000.0 then true else
+    let igstVal = decimal (Math.Abs(igst))
+    
+    // B2C (No Buyer)
+    let raw = createDummyInvoice "29AAGCB7383J1Z4" "29" None None igstVal 9m 9m
+    let result = Compiler.compile raw
+    
+    // If it's intrastate, it must reject IGST. We prove it's treated as Intrastate.
+    if igstVal > 0m then
+        result.Violations |> List.exists (fun v -> v.Rule = "IGST_CGST_LAW")
+    else true
