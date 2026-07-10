@@ -10,13 +10,9 @@
         "dependencies": {
           "Argu": "6.2.5",
           "FSharp.Core": "10.1.301",
-          "GSTFlow.Adapters": "1.0.0",
-          "GSTFlow.Agent": "1.0.0",
           "GSTFlow.Core": "1.0.0",
           "GSTFlow.Emit": "1.0.0",
-          "GSTFlow.Reconcile": "1.0.0",
           "GSTFlow.Rules": "1.0.0",
-          "GSTFlow.Verify": "1.0.0",
           "Thoth.Json.Net": "12.0.0"
         },
         "runtime": {
@@ -143,31 +139,6 @@
           }
         }
       },
-      "GSTFlow.Adapters/1.0.0": {
-        "dependencies": {
-          "FSharp.Core": "10.1.301",
-          "GSTFlow.Core": "1.0.0"
-        },
-        "runtime": {
-          "GSTFlow.Adapters.dll": {
-            "assemblyVersion": "1.0.0.0",
-            "fileVersion": "1.0.0.0"
-          }
-        }
-      },
-      "GSTFlow.Agent/1.0.0": {
-        "dependencies": {
-          "FSharp.Core": "10.1.301",
-          "GSTFlow.Core": "1.0.0",
-          "GSTFlow.Rules": "1.0.0"
-        },
-        "runtime": {
-          "GSTFlow.Agent.dll": {
-            "assemblyVersion": "1.0.0.0",
-            "fileVersion": "1.0.0.0"
-          }
-        }
-      },
       "GSTFlow.Core/1.0.0": {
         "dependencies": {
           "FSharp.Core": "10.1.301"
@@ -192,18 +163,6 @@
           }
         }
       },
-      "GSTFlow.Reconcile/1.0.0": {
-        "dependencies": {
-          "FSharp.Core": "10.1.301",
-          "GSTFlow.Core": "1.0.0"
-        },
-        "runtime": {
-          "GSTFlow.Reconcile.dll": {
-            "assemblyVersion": "1.0.0.0",
-            "fileVersion": "1.0.0.0"
-          }
-        }
-      },
       "GSTFlow.Rules/1.0.0": {
         "dependencies": {
           "FSharp.Core": "10.1.301",
@@ -211,20 +170,6 @@
         },
         "runtime": {
           "GSTFlow.Rules.dll": {
-            "assemblyVersion": "1.0.0.0",
-            "fileVersion": "1.0.0.0"
-          }
-        }
-      },
-      "GSTFlow.Verify/1.0.0": {
-        "dependencies": {
-          "FSharp.Core": "10.1.301",
-          "GSTFlow.Core": "1.0.0",
-          "GSTFlow.Emit": "1.0.0",
-          "GSTFlow.Rules": "1.0.0"
-        },
-        "runtime": {
-          "GSTFlow.Verify.dll": {
             "assemblyVersion": "1.0.0.0",
             "fileVersion": "1.0.0.0"
           }
@@ -287,16 +232,6 @@
       "path": "thoth.json.net/12.0.0",
       "hashPath": "thoth.json.net.12.0.0.nupkg.sha512"
     },
-    "GSTFlow.Adapters/1.0.0": {
-      "type": "project",
-      "serviceable": false,
-      "sha512": ""
-    },
-    "GSTFlow.Agent/1.0.0": {
-      "type": "project",
-      "serviceable": false,
-      "sha512": ""
-    },
     "GSTFlow.Core/1.0.0": {
       "type": "project",
       "serviceable": false,
@@ -307,17 +242,7 @@
       "serviceable": false,
       "sha512": ""
     },
-    "GSTFlow.Reconcile/1.0.0": {
-      "type": "project",
-      "serviceable": false,
-      "sha512": ""
-    },
     "GSTFlow.Rules/1.0.0": {
-      "type": "project",
-      "serviceable": false,
-      "sha512": ""
-    },
-    "GSTFlow.Verify/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

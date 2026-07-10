@@ -151,35 +151,6 @@
           }
         }
       },
-      "GSTFlow.Adapters/1.0.0": {
-        "type": "project",
-        "framework": ".NETCoreApp,Version=v10.0",
-        "dependencies": {
-          "FSharp.Core": "10.1.301",
-          "GSTFlow.Core": "1.0.0"
-        },
-        "compile": {
-          "bin/placeholder/GSTFlow.Adapters.dll": {}
-        },
-        "runtime": {
-          "bin/placeholder/GSTFlow.Adapters.dll": {}
-        }
-      },
-      "GSTFlow.Agent/1.0.0": {
-        "type": "project",
-        "framework": ".NETCoreApp,Version=v10.0",
-        "dependencies": {
-          "FSharp.Core": "10.1.301",
-          "GSTFlow.Core": "1.0.0",
-          "GSTFlow.Rules": "1.0.0"
-        },
-        "compile": {
-          "bin/placeholder/GSTFlow.Agent.dll": {}
-        },
-        "runtime": {
-          "bin/placeholder/GSTFlow.Agent.dll": {}
-        }
-      },
       "GSTFlow.Core/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v10.0",
@@ -208,20 +179,6 @@
           "bin/placeholder/GSTFlow.Emit.dll": {}
         }
       },
-      "GSTFlow.Reconcile/1.0.0": {
-        "type": "project",
-        "framework": ".NETCoreApp,Version=v10.0",
-        "dependencies": {
-          "FSharp.Core": "10.1.301",
-          "GSTFlow.Core": "1.0.0"
-        },
-        "compile": {
-          "bin/placeholder/GSTFlow.Reconcile.dll": {}
-        },
-        "runtime": {
-          "bin/placeholder/GSTFlow.Reconcile.dll": {}
-        }
-      },
       "GSTFlow.Rules/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v10.0",
@@ -234,22 +191,6 @@
         },
         "runtime": {
           "bin/placeholder/GSTFlow.Rules.dll": {}
-        }
-      },
-      "GSTFlow.Verify/1.0.0": {
-        "type": "project",
-        "framework": ".NETCoreApp,Version=v10.0",
-        "dependencies": {
-          "FSharp.Core": "10.1.301",
-          "GSTFlow.Core": "1.0.0",
-          "GSTFlow.Emit": "1.0.0",
-          "GSTFlow.Rules": "1.0.0"
-        },
-        "compile": {
-          "bin/placeholder/GSTFlow.Verify.dll": {}
-        },
-        "runtime": {
-          "bin/placeholder/GSTFlow.Verify.dll": {}
         }
       }
     }
@@ -430,16 +371,6 @@
         "thoth.json.net.nuspec"
       ]
     },
-    "GSTFlow.Adapters/1.0.0": {
-      "type": "project",
-      "path": "../GSTFlow.Adapters/GSTFlow.Adapters.fsproj",
-      "msbuildProject": "../GSTFlow.Adapters/GSTFlow.Adapters.fsproj"
-    },
-    "GSTFlow.Agent/1.0.0": {
-      "type": "project",
-      "path": "../GSTFlow.Agent/GSTFlow.Agent.fsproj",
-      "msbuildProject": "../GSTFlow.Agent/GSTFlow.Agent.fsproj"
-    },
     "GSTFlow.Core/1.0.0": {
       "type": "project",
       "path": "../GSTFlow.Core/GSTFlow.Core.fsproj",
@@ -450,33 +381,19 @@
       "path": "../GSTFlow.Emit/GSTFlow.Emit.fsproj",
       "msbuildProject": "../GSTFlow.Emit/GSTFlow.Emit.fsproj"
     },
-    "GSTFlow.Reconcile/1.0.0": {
-      "type": "project",
-      "path": "../GSTFlow.Reconcile/GSTFlow.Reconcile.fsproj",
-      "msbuildProject": "../GSTFlow.Reconcile/GSTFlow.Reconcile.fsproj"
-    },
     "GSTFlow.Rules/1.0.0": {
       "type": "project",
       "path": "../GSTFlow.Rules/GSTFlow.Rules.fsproj",
       "msbuildProject": "../GSTFlow.Rules/GSTFlow.Rules.fsproj"
-    },
-    "GSTFlow.Verify/1.0.0": {
-      "type": "project",
-      "path": "../GSTFlow.Verify/GSTFlow.Verify.fsproj",
-      "msbuildProject": "../GSTFlow.Verify/GSTFlow.Verify.fsproj"
     }
   },
   "projectFileDependencyGroups": {
     "net10.0": [
       "Argu >= 6.2.5",
       "FSharp.Core >= 10.1.301",
-      "GSTFlow.Adapters >= 1.0.0",
-      "GSTFlow.Agent >= 1.0.0",
       "GSTFlow.Core >= 1.0.0",
       "GSTFlow.Emit >= 1.0.0",
-      "GSTFlow.Reconcile >= 1.0.0",
       "GSTFlow.Rules >= 1.0.0",
-      "GSTFlow.Verify >= 1.0.0",
       "Thoth.Json.Net >= 12.0.0"
     ]
   },
@@ -507,26 +424,14 @@
           "framework": "net10.0",
           "targetAlias": "net10.0",
           "projectReferences": {
-            "/root/repos/github/fsharp/GSTFlow/GSTFlow.Adapters/GSTFlow.Adapters.fsproj": {
-              "projectPath": "/root/repos/github/fsharp/GSTFlow/GSTFlow.Adapters/GSTFlow.Adapters.fsproj"
-            },
-            "/root/repos/github/fsharp/GSTFlow/GSTFlow.Agent/GSTFlow.Agent.fsproj": {
-              "projectPath": "/root/repos/github/fsharp/GSTFlow/GSTFlow.Agent/GSTFlow.Agent.fsproj"
-            },
             "/root/repos/github/fsharp/GSTFlow/GSTFlow.Core/GSTFlow.Core.fsproj": {
               "projectPath": "/root/repos/github/fsharp/GSTFlow/GSTFlow.Core/GSTFlow.Core.fsproj"
             },
             "/root/repos/github/fsharp/GSTFlow/GSTFlow.Emit/GSTFlow.Emit.fsproj": {
               "projectPath": "/root/repos/github/fsharp/GSTFlow/GSTFlow.Emit/GSTFlow.Emit.fsproj"
             },
-            "/root/repos/github/fsharp/GSTFlow/GSTFlow.Reconcile/GSTFlow.Reconcile.fsproj": {
-              "projectPath": "/root/repos/github/fsharp/GSTFlow/GSTFlow.Reconcile/GSTFlow.Reconcile.fsproj"
-            },
             "/root/repos/github/fsharp/GSTFlow/GSTFlow.Rules/GSTFlow.Rules.fsproj": {
               "projectPath": "/root/repos/github/fsharp/GSTFlow/GSTFlow.Rules/GSTFlow.Rules.fsproj"
-            },
-            "/root/repos/github/fsharp/GSTFlow/GSTFlow.Verify/GSTFlow.Verify.fsproj": {
-              "projectPath": "/root/repos/github/fsharp/GSTFlow/GSTFlow.Verify/GSTFlow.Verify.fsproj"
             }
           }
         }

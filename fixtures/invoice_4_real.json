@@ -1,0 +1,30 @@
+{
+  "InvoiceNumber": "IBNKA26ILDC52953",
+  "InvoiceDate": "2026-07-04",
+  "Seller": {
+    "Gstin": "29AACCI2053A1Z3", 
+    "StateCode": "29"
+  },
+  "Items": [
+    {
+      "Hsn": "07070000",
+      "TaxableValue": 16.23,
+      "GstRate": 0,
+      "Tax": {
+        "Igst": 0,
+        "Cgst": 0,
+        "Sgst": 0
+      }
+    },
+    {
+      "Hsn": "15089099",
+      "TaxableValue": 192.27,
+      "GstRate": 5,
+      "Tax": {
+        "Igst": 0,
+        "Cgst": 4.81,
+        "Sgst": 4.81
+      }
+    }
+  ]
+}

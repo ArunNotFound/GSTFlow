@@ -1,0 +1,20 @@
+{
+  "InvoiceNumber": "HF2729I003414138",
+  "InvoiceDate": "2026-06-12",
+  "Seller": {
+    "Gstin": "29AAACB2894G1ZJ", 
+    "StateCode": "29"
+  },
+  "Items": [
+    {
+      "Hsn": "998412",
+      "TaxableValue": 933.00,
+      "GstRate": 18,
+      "Tax": {
+        "Igst": 0,
+        "Cgst": 83.97,
+        "Sgst": 83.97
+      }
+    }
+  ]
+}

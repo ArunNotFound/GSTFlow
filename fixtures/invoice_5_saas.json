@@ -1,0 +1,24 @@
+{
+  "InvoiceNumber": "1304886828521013-1",
+  "InvoiceDate": "2026-06-28",
+  "Seller": {
+    "Gstin": "9918IRL29002OSG", 
+    "StateCode": "99"
+  },
+  "Buyer": {
+    "Gstin": "",
+    "StateCode": "29"
+  },
+  "Items": [
+    {
+      "Hsn": "998439",
+      "TaxableValue": 4152.54,
+      "GstRate": 18,
+      "Tax": {
+        "Igst": 747.46,
+        "Cgst": 0,
+        "Sgst": 0
+      }
+    }
+  ]
+}

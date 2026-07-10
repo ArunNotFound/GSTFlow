@@ -1,0 +1,20 @@
+{
+  "InvoiceNumber": "SMAB-27798",
+  "InvoiceDate": "2024-04-28",
+  "Seller": {
+    "Gstin": "33AAMCM3175B2ZO", 
+    "StateCode": "33"
+  },
+  "Items": [
+    {
+      "Hsn": "85287219",
+      "TaxableValue": 13974.58,
+      "GstRate": 18,
+      "Tax": {
+        "Igst": 0,
+        "Cgst": 1257.71,
+        "Sgst": 1257.71
+      }
+    }
+  ]
+}

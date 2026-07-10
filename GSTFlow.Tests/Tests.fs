@@ -1,4 +1,4 @@
-module GSTFlow.Tests
+module GSTFlow.Tests.CoreTests
 
 open System
 open Xunit

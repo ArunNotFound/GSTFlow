@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -12,11 +12,7 @@
   <ItemGroup>
     <ProjectReference Include="..\GSTFlow.Core\GSTFlow.Core.fsproj" />
     <ProjectReference Include="..\GSTFlow.Rules\GSTFlow.Rules.fsproj" />
-    <ProjectReference Include="..\GSTFlow.Adapters\GSTFlow.Adapters.fsproj" />
     <ProjectReference Include="..\GSTFlow.Emit\GSTFlow.Emit.fsproj" />
-    <ProjectReference Include="..\GSTFlow.Verify\GSTFlow.Verify.fsproj" />
-    <ProjectReference Include="..\GSTFlow.Reconcile\GSTFlow.Reconcile.fsproj" />
-    <ProjectReference Include="..\GSTFlow.Agent\GSTFlow.Agent.fsproj" />
   </ItemGroup>
 
   <ItemGroup>

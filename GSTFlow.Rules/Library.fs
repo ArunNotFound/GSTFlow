@@ -57,6 +57,11 @@ module Compiler =
                 else Ok { Party.Gstin = g; Party.StateCode = raw.StateCode }
             | Error e -> Error { Rule = "GSTIN_FORMAT"; Description = sprintf "%s GSTIN '%s' is invalid: %s" role raw.Gstin e; IsError = true }
 
+    let private isRcmHsn (hsn: string) =
+        // GTA, Legal, Sponsorship, Security, etc.
+        let prefixes = ["9965"; "9967"; "9973"; "9982"; "9983"; "9985"]
+        prefixes |> List.exists (fun p -> hsn.StartsWith(p))
+
     let private validateItem (isInterstate: bool) (item: RawInvoiceItem) =
         let mutable violations = []
 
@@ -69,17 +74,24 @@ module Compiler =
         // Section 170: Rounding to the nearest Rupee applies at the total level, but item-level tax should be mathematically accurate to 2 decimals.
         let expectedTax = Math.Round(item.TaxableValue * (item.GstRate / 100m), 2)
         
+        let isRcmExempt = isRcmHsn item.Hsn && item.Tax.Igst = 0m && item.Tax.Cgst = 0m && item.Tax.Sgst = 0m
+
         if isInterstate then
             if item.Tax.Cgst > 0m || item.Tax.Sgst > 0m then
                 violations <- { Rule = "IGST_CGST_LAW"; Description = "Interstate supply cannot have CGST or SGST"; IsError = true } :: violations
-            if Math.Abs(item.Tax.Igst - expectedTax) > 0.5m then
+            
+            if not isRcmExempt && Math.Abs(item.Tax.Igst - expectedTax) > 0.5m then
                 violations <- { Rule = "TAX_AMOUNT"; Description = sprintf "Expected IGST approx %M but got %M (failed Sec 170 / item math)" expectedTax item.Tax.Igst; IsError = true } :: violations
         else
             if item.Tax.Igst > 0m then
                 violations <- { Rule = "IGST_CGST_LAW"; Description = "Intrastate supply cannot have IGST"; IsError = true } :: violations
+            
             let expectedSplit = Math.Round(expectedTax / 2m, 2)
-            if Math.Abs(item.Tax.Cgst - expectedSplit) > 0.5m || Math.Abs(item.Tax.Sgst - expectedSplit) > 0.5m then
+            if not isRcmExempt && (Math.Abs(item.Tax.Cgst - expectedSplit) > 0.5m || Math.Abs(item.Tax.Sgst - expectedSplit) > 0.5m) then
                 violations <- { Rule = "TAX_AMOUNT"; Description = sprintf "Expected CGST/SGST approx %M but got C:%M S:%M" expectedSplit item.Tax.Cgst item.Tax.Sgst; IsError = true } :: violations
+                
+        if isRcmExempt then
+            violations <- { Rule = "RCM_APPLIED"; Description = sprintf "Taxes are zero for HSN '%s' - Assuming Reverse Charge Mechanism (RCM) applies." item.Hsn; IsError = false } :: violations
         violations
 
     let compile (raw: RawInvoice) : CompilationResult =
