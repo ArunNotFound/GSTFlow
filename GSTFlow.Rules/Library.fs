@@ -132,9 +132,10 @@ module Compiler =
             
             // The strict letter of Sec 170 requires tax to be rounded.
             // But real-world ERPs (like Amazon) retain fractional tax and round only the final total.
-            // We flag an error ONLY if the final invoice total is not rounded.
+            // We flag a WARNING if the final invoice total is not rounded.
+            // Telecom operators (Airtel, Jio) do not round their bills. If we block this, we reject all Wi-Fi expenses.
             if totalInvoiceValue % 1m <> 0m then
-                 violations <- { Rule = "SEC_170_ROUNDING"; Description = "Section 170 CGST Act: Final invoice total must be rounded off to the nearest Rupee."; IsError = true } :: violations
+                 violations <- { Rule = "SEC_170_ROUNDING"; Description = "Section 170 CGST Act: Final invoice total must be rounded off to the nearest Rupee. Note: Telecom operators often ignore this."; IsError = false } :: violations
                  
             if violations |> List.exists (fun v -> v.IsError) then
                 { IR = None; Violations = violations }

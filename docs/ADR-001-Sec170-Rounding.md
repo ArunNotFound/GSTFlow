@@ -15,10 +15,12 @@ Our original implementation of the Section 170 CGST Act rule (`SEC_170_ROUNDING`
 ## Learning
 While the strict letter of Section 170 ("The tax assessed... shall be rounded off to the nearest rupee") implies that tax components should be integers, massive enterprise ERPs like Amazon interpret this practically: they retain fractional precision for item-level tax lines and only round the **Final Invoice Total** to the nearest Rupee (13974.58 + 2515.42 = 16490.00 perfectly). 
 
-If we strictly block fractional tax fields, GSTFlow will yield false-positive rejections against a vast swath of India's retail economy.
+Furthermore, we subsequently tested a real telecom invoice from **Airtel**. Airtel does *not* even round the Final Invoice Total. They literally charge the consumer fractional paise (e.g. ₹1,100.94). If we strictly enforce Section 170, we will block all telecom/Wi-Fi expenses from the Indian ecosystem, rendering the tool hostile to normal business realities.
+
+If we strictly block fractional tax fields or fractional invoice totals, GSTFlow will yield false-positive rejections against a vast swath of India's retail and utility economy.
 
 ## Decision
-We demoted the strict tax-field rounding check. The `SEC_170_ROUNDING` rule now only fires if the **Final Invoice Total** (TaxableValue + Total Tax) is not an integer. We accept fractional tax fields as long as the math aligns and the final consumer pays a rounded Rupee amount.
+We demoted the strict tax-field rounding check from an absolute Error (`IsError = true`) to a Warning (`IsError = false`). The `SEC_170_ROUNDING` rule now only fires as an informational warning if the **Final Invoice Total** (TaxableValue + Total Tax) is not an integer. We accept fractional tax fields and fractional invoice totals, pushing the verdict to the CA rather than halting the workflow.
 
 ## Status
 Accepted and Implemented.
