@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Editor from '@monaco-editor/react';
 import PdfUploader from './PdfUploader';
 import ConfirmationScreen from './ConfirmationScreen';
+import VerdictScreen from './VerdictScreen';
 // @ts-ignore
 import { compileInvoice } from './fable/Library.ts';
 
@@ -52,8 +53,8 @@ const defaultInvoice = `{
 }`;
 
 export default function App() {
-  const [inputMode, setInputMode] = useState<'json' | 'pdf'>('json');
-  const [pdfState, setPdfState] = useState<'upload' | 'confirm'>('upload');
+  const [inputMode, setInputMode] = useState<'json' | 'pdf'>('pdf');
+  const [pdfState, setPdfState] = useState<'upload' | 'confirm' | 'verdict'>('upload');
   const [extractedData, setExtractedData] = useState<any>(null);
 
   const [jsonInput, setJsonInput] = useState(defaultInvoice);
@@ -101,8 +102,8 @@ export default function App() {
       </header>
 
       <main className="flex-1 flex overflow-hidden">
-        {/* Left Panel: Input Area */}
-        <div className="w-1/2 flex flex-col relative group border-r border-gray-800 bg-gray-900">
+        {/* Left/Main Panel: Input Area */}
+        <div className={`${inputMode === 'json' ? 'w-1/2 border-r' : 'w-full'} flex flex-col relative group border-gray-800 bg-gray-900`}>
           
           {/* Mode Switcher */}
           <div className="absolute top-4 left-4 z-20 bg-gray-800/80 rounded-lg p-1 flex items-center shadow-lg border border-gray-700">
@@ -135,93 +136,104 @@ export default function App() {
                 setExtractedData(data);
                 setPdfState('confirm');
               }} />
-            ) : (
+            ) : pdfState === 'confirm' ? (
               <ConfirmationScreen 
                 extractedData={extractedData} 
                 onConfirm={(validJson) => {
                   setJsonInput(validJson);
-                  setInputMode('json');
-                  setPdfState('upload');
+                  setPdfState('verdict');
                 }} 
                 onCancel={() => setPdfState('upload')}
+              />
+            ) : (
+              <VerdictScreen 
+                isSuccess={!err && violations.length === 0}
+                violations={violations}
+                invoiceData={jsonInput}
+                onReset={() => {
+                  setJsonInput(defaultInvoice);
+                  setPdfState('upload');
+                }}
               />
             )
           )}
         </div>
 
-        {/* Right Panel: Output */}
-        <div className="w-1/2 flex flex-col bg-[#0d1117] overflow-y-auto">
-          {err ? (
-             <div className="p-8 space-y-6">
-               <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-6 shadow-xl">
-                 <h2 className="text-red-400 font-semibold mb-2 flex items-center">
-                   <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                   Semantic Parsing Error
-                 </h2>
-                 <pre className="text-sm text-red-300/80 whitespace-pre-wrap font-mono">{err}</pre>
-               </div>
-               {violations.length > 0 && (
-                 <div className="bg-orange-900/20 border border-orange-500/30 rounded-xl p-6 shadow-xl">
-                   <h2 className="text-orange-400 font-semibold mb-4 flex items-center">
-                     <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                     Rule Violations ({violations.length})
+        {/* Right Panel: Output (Only in JSON Mode) */}
+        {inputMode === 'json' && (
+          <div className="w-1/2 flex flex-col bg-[#0d1117] overflow-y-auto">
+            {err ? (
+               <div className="p-8 space-y-6">
+                 <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-6 shadow-xl">
+                   <h2 className="text-red-400 font-semibold mb-2 flex items-center">
+                     <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                     Semantic Parsing Error
                    </h2>
-                   <div className="space-y-3">
-                     {violations.map((v, i) => {
-                       const t = translations[v.Rule];
-                       return (
-                         <div key={i} className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
-                           <div className="flex justify-between items-start mb-2">
-                             <div className="text-xs text-orange-400 font-mono font-bold bg-orange-400/10 px-2 py-1 rounded">{v.Rule}</div>
-                           </div>
-                           
-                           {t ? (
-                             <div className="mb-3">
-                               <div className="text-base text-white font-medium mb-1">
-                                 {lang === 'en' ? t.en : t.hi}
-                               </div>
-                               <div className="text-sm text-gray-400 italic">
-                                 {lang === 'en' ? "💡 Hint: " + t.hint_en : "💡 सुझाव: " + t.hint_hi}
-                               </div>
-                             </div>
-                           ) : null}
-
-                           <div className="text-sm text-gray-300 bg-gray-900/50 p-2 rounded border border-gray-700/50 font-mono">
-                             {v.Description}
-                           </div>
-                         </div>
-                       );
-                     })}
-                   </div>
+                   <pre className="text-sm text-red-300/80 whitespace-pre-wrap font-mono">{err}</pre>
                  </div>
-               )}
-             </div>
-          ) : (
-            <div className="p-8 space-y-8">
-              {/* Proof Report */}
-              <div className="bg-gray-800/40 rounded-xl border border-gray-700/50 overflow-hidden shadow-2xl backdrop-blur-sm transition-all hover:border-gray-600/50">
-                <div className="px-4 py-3 border-b border-gray-700/50 bg-gray-800/60 text-sm font-medium text-emerald-400 flex items-center">
-                  <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                  Cryptographic Proof Report (PROOF.md)
+                 {violations.length > 0 && (
+                   <div className="bg-orange-900/20 border border-orange-500/30 rounded-xl p-6 shadow-xl">
+                     <h2 className="text-orange-400 font-semibold mb-4 flex items-center">
+                       <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                       Rule Violations ({violations.length})
+                     </h2>
+                     <div className="space-y-3">
+                       {violations.map((v, i) => {
+                         const t = translations[v.Rule];
+                         return (
+                           <div key={i} className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+                             <div className="flex justify-between items-start mb-2">
+                               <div className="text-xs text-orange-400 font-mono font-bold bg-orange-400/10 px-2 py-1 rounded">{v.Rule}</div>
+                             </div>
+                             
+                             {t ? (
+                               <div className="mb-3">
+                                 <div className="text-base text-white font-medium mb-1">
+                                   {lang === 'en' ? t.en : t.hi}
+                                 </div>
+                                 <div className="text-sm text-gray-400 italic">
+                                   {lang === 'en' ? "💡 Hint: " + t.hint_en : "💡 सुझाव: " + t.hint_hi}
+                                 </div>
+                               </div>
+                             ) : null}
+  
+                             <div className="text-sm text-gray-300 bg-gray-900/50 p-2 rounded border border-gray-700/50 font-mono">
+                               {v.Description}
+                             </div>
+                           </div>
+                         );
+                       })}
+                     </div>
+                   </div>
+                 )}
+               </div>
+            ) : (
+              <div className="p-8 space-y-8">
+                {/* Proof Report */}
+                <div className="bg-gray-800/40 rounded-xl border border-gray-700/50 overflow-hidden shadow-2xl backdrop-blur-sm transition-all hover:border-gray-600/50">
+                  <div className="px-4 py-3 border-b border-gray-700/50 bg-gray-800/60 text-sm font-medium text-emerald-400 flex items-center">
+                    <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    Cryptographic Proof Report (PROOF.md)
+                  </div>
+                  <div className="p-6">
+                    <pre className="text-sm text-gray-300 font-mono whitespace-pre-wrap">{proof}</pre>
+                  </div>
                 </div>
-                <div className="p-6">
-                  <pre className="text-sm text-gray-300 font-mono whitespace-pre-wrap">{proof}</pre>
+  
+                {/* GSTR-1 Payload */}
+                <div className="bg-gray-800/40 rounded-xl border border-gray-700/50 overflow-hidden shadow-2xl backdrop-blur-sm transition-all hover:border-gray-600/50">
+                  <div className="px-4 py-3 border-b border-gray-700/50 bg-gray-800/60 text-sm font-medium text-cyan-400 flex items-center">
+                    <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    GSTR-1 Normalized Payload
+                  </div>
+                  <div className="p-6">
+                    <pre className="text-sm text-gray-300 font-mono whitespace-pre-wrap">{gstr1}</pre>
+                  </div>
                 </div>
               </div>
-
-              {/* GSTR-1 Payload */}
-              <div className="bg-gray-800/40 rounded-xl border border-gray-700/50 overflow-hidden shadow-2xl backdrop-blur-sm transition-all hover:border-gray-600/50">
-                <div className="px-4 py-3 border-b border-gray-700/50 bg-gray-800/60 text-sm font-medium text-cyan-400 flex items-center">
-                  <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                  GSTR-1 Normalized Payload
-                </div>
-                <div className="p-6">
-                  <pre className="text-sm text-gray-300 font-mono whitespace-pre-wrap">{gstr1}</pre>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </main>
 
       {/* Trust Triad & Legal Footer */}
