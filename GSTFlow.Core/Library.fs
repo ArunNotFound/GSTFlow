@@ -31,7 +31,8 @@ module GstinValidation =
     let isValid (gstin: string) =
         if gstin.Length <> 15 then false
         else
-            let pattern = "^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$"
+            // Regular GSTIN has Z at 14th char, OIDAR has S or something else, PAN might be numbers.
+            let pattern = "^[0-9]{2}[A-Z0-9]{10}[1-9A-Z]{1}[A-Z][0-9A-Z]{1}$"
             if not (Regex.IsMatch(gstin, pattern)) then false
             else
                 try
@@ -43,7 +44,8 @@ type GSTIN = private GSTIN of string
 
 module GSTIN =
     let create (str: string) =
-        if GstinValidation.isValid str then Ok (GSTIN str)
+        if str = "URP" then Ok (GSTIN str)
+        elif GstinValidation.isValid str then Ok (GSTIN str)
         else Error "Invalid GSTIN format or checksum"
         
     let value (GSTIN str) = str

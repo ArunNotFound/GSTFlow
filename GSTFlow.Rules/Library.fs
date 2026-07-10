@@ -38,7 +38,7 @@ type CompilationResult = {
 module Compiler =
 
     let validStateCodes = 
-        Set.ofList [ for i in 1..38 -> sprintf "%02d" i ]
+        Set.ofList ([ for i in 1..38 -> sprintf "%02d" i ] @ [ "97"; "99" ])
 
     let validRateSlabs = 
         Set.ofList [ 0m; 0.1m; 0.25m; 1.5m; 3m; 5m; 12m; 18m; 28m ]
@@ -92,6 +92,15 @@ module Compiler =
 
         let buyerRes = 
             match raw.Buyer with
+            | Some b when String.IsNullOrWhiteSpace(b.Gstin) -> 
+                if not (validStateCodes.Contains b.StateCode) then
+                    let err = { Rule = "STATE_CODE"; Description = sprintf "Buyer State Code '%s' is not in the valid vocabulary (01-38, 97, 99)" b.StateCode; IsError = true }
+                    violations <- err :: violations
+                    Some (Error err)
+                else
+                    // B2C with known POS
+                    let urpGstin = match GSTIN.create "URP" with Ok g -> g | _ -> failwith "URP"
+                    Some (Ok { Party.Gstin = urpGstin; Party.StateCode = b.StateCode })
             | Some b -> 
                 match validateGstin b "Buyer" with
                 | Ok b2 -> Some (Ok b2)
@@ -115,8 +124,8 @@ module Compiler =
             
             let supplyType = 
                 match buyer with
-                | Some _ -> B2B
-                | None -> B2C
+                | Some b when GSTIN.value b.Gstin <> "URP" -> B2B
+                | _ -> B2C
                 
             let itemViolations = raw.Items |> List.collect (validateItem isInterstate)
             violations <- itemViolations @ violations
