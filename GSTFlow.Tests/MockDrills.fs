@@ -15,10 +15,10 @@ let createInvoice (sellerGstin: string) (sellerState: string) (buyerGstin: strin
     {
         InvoiceNumber = "TORPEDO-001"
         InvoiceDate = "2026-07-10"
-        Seller = { Gstin = sellerGstin; StateCode = sellerState }
+        Seller = { Gstin = sellerGstin; StateCode = sellerState; IsSez = Some false }
         Buyer = 
             match buyerGstin, buyerState with
-            | Some bg, Some state -> Some { Gstin = bg; StateCode = state }
+            | Some bg, Some state -> Some { Gstin = bg; StateCode = state; IsSez = Some false }
             | _ -> None
         Items = [
             {

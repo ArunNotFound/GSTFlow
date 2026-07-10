@@ -53,10 +53,10 @@ let createDummyInvoice (sellerGstin: string) (sellerState: string) (buyerGstin: 
     {
         InvoiceNumber = "TEST-001"
         InvoiceDate = "2026-01-01"
-        Seller = { Gstin = sellerGstin; StateCode = sellerState }
+        Seller = { Gstin = sellerGstin; StateCode = sellerState; IsSez = None }
         Buyer = 
             match buyerGstin, buyerState with
-            | Some bg, Some state -> Some { Gstin = bg; StateCode = state }
+            | Some bg, Some state -> Some { Gstin = bg; StateCode = state; IsSez = None }
             | _ -> None
         Items = [
             {

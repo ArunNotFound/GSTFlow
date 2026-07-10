@@ -7,6 +7,7 @@ open GSTFlow.Core
 type RawParty = {
     Gstin: string
     StateCode: string
+    IsSez: bool option
 }
 
 type RawInvoiceItem = {
@@ -46,16 +47,15 @@ module Compiler =
     let isValidHsn (hsn: string) =
         System.Text.RegularExpressions.Regex.IsMatch(hsn, @"^(\d{4}|\d{6}|\d{8})$")
 
-    let private validateGstin (raw: RawParty) (role: string) =
-        if not (validStateCodes.Contains raw.StateCode) then
-            Error { Rule = "STATE_CODE"; Description = sprintf "%s State Code '%s' is not in the valid vocabulary (01-38)" role raw.StateCode; IsError = true }
-        else
-            match GSTIN.create raw.Gstin with
-            | Ok g -> 
-                if raw.Gstin.Substring(0, 2) <> raw.StateCode then
-                    Error { Rule = "GSTIN_STATE_MATCH"; Description = sprintf "%s GSTIN '%s' does not match State Code '%s'" role raw.Gstin raw.StateCode; IsError = true }
-                else Ok { Party.Gstin = g; Party.StateCode = raw.StateCode }
-            | Error e -> Error { Rule = "GSTIN_FORMAT"; Description = sprintf "%s GSTIN '%s' is invalid: %s" role raw.Gstin e; IsError = true }
+    let private validateParty (role: string) (raw: RawParty) =
+        match GSTIN.create raw.Gstin with
+        | Ok g ->
+            if raw.Gstin.Substring(0, 2) <> raw.StateCode then
+                Error { Rule = "GSTIN_STATE_MATCH"; Description = sprintf "%s StateCode '%s' does not match GSTIN prefix '%s'" role raw.StateCode (raw.Gstin.Substring(0, 2)); IsError = true }
+            else
+                let isSez = match raw.IsSez with Some x -> x | None -> false
+                Ok { Party.Gstin = g; Party.StateCode = raw.StateCode; Party.IsSez = isSez }
+        | Error e -> Error { Rule = "GSTIN_FORMAT"; Description = sprintf "%s GSTIN '%s' is invalid: %s" role raw.Gstin e; IsError = true }
 
     let private isRcmHsn (hsn: string) =
         // GTA, Legal, Sponsorship, Security, etc.
@@ -97,7 +97,7 @@ module Compiler =
     let compile (raw: RawInvoice) : CompilationResult =
         let mutable violations = []
         
-        let sellerRes = validateGstin raw.Seller "Seller"
+        let sellerRes = validateParty "Seller" raw.Seller
         match sellerRes with
         | Error e -> violations <- e :: violations
         | _ -> ()
@@ -112,9 +112,9 @@ module Compiler =
                 else
                     // B2C with known POS
                     let urpGstin = match GSTIN.create "URP" with Ok g -> g | _ -> failwith "URP"
-                    Some (Ok { Party.Gstin = urpGstin; Party.StateCode = b.StateCode })
+                    Some (Ok { Party.Gstin = urpGstin; Party.StateCode = b.StateCode; Party.IsSez = false })
             | Some b -> 
-                match validateGstin b "Buyer" with
+                match validateParty "Buyer" b with
                 | Ok b2 -> Some (Ok b2)
                 | Error e -> 
                     violations <- e :: violations
@@ -132,7 +132,10 @@ module Compiler =
                 | Some b -> b.StateCode
                 | None -> seller.StateCode
                 
-            let isInterstate = seller.StateCode <> pos
+            let isInterstate = 
+                seller.StateCode <> pos || 
+                seller.IsSez || 
+                (match buyer with Some b -> b.IsSez | None -> false)
             
             let supplyType = 
                 match buyer with

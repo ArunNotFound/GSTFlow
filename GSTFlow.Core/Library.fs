@@ -53,6 +53,7 @@ module GSTIN =
 type Party = {
     Gstin: GSTIN
     StateCode: StateCode
+    IsSez: bool
 }
 
 type SupplyType =
