@@ -49,11 +49,12 @@ let ``Law: Falsifier - Flipping any character in a valid GSTIN to a different ch
 // 2. Tax Semantic Laws
 // ---------------------------------------------------------
 
-let createDummyInvoice (sellerGstin: string) (sellerState: string) (buyerGstin: string option) (buyerState: string option) (igst: decimal) (cgst: decimal) (sgst: decimal) =
+let createDummyInvoice (sellerGstin: string) (sellerState: string) (buyerGstin: string option) (buyerState: string option) (igst: decimal) (cgst: decimal) (sgst: decimal) : GSTFlow.Rules.RawInvoice =
     {
         DocumentType = None
         InvoiceNumber = "TEST-001"
         InvoiceDate = "2026-01-01"
+        PlaceOfSupply = None
         OriginalInvoiceNumber = None
         OriginalInvoiceDate = None
         Irn = None
@@ -86,7 +87,7 @@ let ``Law: Interstate supply must absolutely reject local taxes`` (cgst: float) 
     let result = Compiler.compile raw
     
     if cgstVal > 0m || sgstVal > 0m then
-        result.Violations |> List.exists (fun v -> v.Rule = "IGST_CGST_LAW")
+        result.Results |> List.exists (fun v -> v.Rule = "IGST_CGST_LAW")
     else true
 
 [<Property>]
@@ -99,7 +100,7 @@ let ``Law: Intrastate supply must absolutely reject integrated tax`` (igst: floa
     let result = Compiler.compile raw
     
     if igstVal > 0m then
-        result.Violations |> List.exists (fun v -> v.Rule = "IGST_CGST_LAW")
+        result.Results |> List.exists (fun v -> v.Rule = "IGST_CGST_LAW")
     else true
 
 [<Property>]
@@ -113,5 +114,5 @@ let ``Law: B2C supply implicitly binds Place Of Supply to Seller State (Intrasta
     
     // If it's intrastate, it must reject IGST. We prove it's treated as Intrastate.
     if igstVal > 0m then
-        result.Violations |> List.exists (fun v -> v.Rule = "IGST_CGST_LAW")
+        result.Results |> List.exists (fun v -> v.Rule = "IGST_CGST_LAW")
     else true
