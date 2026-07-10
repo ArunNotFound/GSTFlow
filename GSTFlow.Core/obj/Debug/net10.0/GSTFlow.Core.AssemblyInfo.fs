@@ -10,7 +10,7 @@ open System.Reflection
 [<assembly: System.Reflection.AssemblyCompanyAttribute("GSTFlow.Core")>]
 [<assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")>]
 [<assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")>]
-[<assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+fe31404c708987f3961104801aecc9bf6993998b")>]
+[<assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+fdc855871adb01a7815b5832463b3ce121fe64c4")>]
 [<assembly: System.Reflection.AssemblyProductAttribute("GSTFlow.Core")>]
 [<assembly: System.Reflection.AssemblyTitleAttribute("GSTFlow.Core")>]
 [<assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")>]

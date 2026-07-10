@@ -56,10 +56,10 @@ let ``DIVE 01: Standard B2B Invoice math must pass`` (isInterstate: bool) =
     let raw = createInvoice None None None None sellerGstin sellerState (Some buyerGstin) (Some buyerState) false igst cgst sgst None "9983" rate None
     let res = Compiler.compile raw
     
-    let errors = res.Results |> List.filter (fun v -> v.Outcome = Fail)
+    let errors = res.Envelope.Results |> List.filter (fun v -> v.Outcome = Fail)
     if errors.Length > 0 then
         for e in errors do
-            printfn "Violation: %s - %s" e.Rule e.Description
+            printfn "Violation: %s - %s" e.RuleId (defaultArg e.Evidence "")
         false
     else true
 
@@ -84,10 +84,10 @@ let ``DIVE 02: Reverse Charge (RCM) GTA Services must allow 0 tax on invoice`` (
     let raw = createInvoice None None None None sellerGstin sellerState (Some buyerGstin) (Some buyerState) false igst cgst sgst None "9965" rate None
     let res = Compiler.compile raw
     
-    let errors = res.Results |> List.filter (fun v -> v.Outcome = Fail)
+    let errors = res.Envelope.Results |> List.filter (fun v -> v.Outcome = Fail)
     if errors.Length > 0 then
         for e in errors do
-            printfn "Violation: %s - %s" e.Rule e.Description
+            printfn "Violation: %s - %s" e.RuleId (defaultArg e.Evidence "")
         false
     else true
 
@@ -111,10 +111,10 @@ let ``DIVE 03: SEZ Supply must enforce Interstate (IGST) even within same state`
     let raw = createInvoice None None None None sellerGstin sellerState (Some buyerGstin) (Some buyerState) true igst cgst sgst None "9983" rate None
     let res = Compiler.compile raw
     
-    let errors = res.Results |> List.filter (fun v -> v.Outcome = Fail)
+    let errors = res.Envelope.Results |> List.filter (fun v -> v.Outcome = Fail)
     if errors.Length > 0 then
         for e in errors do
-            printfn "Violation: %s - %s" e.Rule e.Description
+            printfn "Violation: %s - %s" e.RuleId (defaultArg e.Evidence "")
         false
     else true
 
@@ -141,10 +141,10 @@ let ``DIVE 04: Demerit goods must attract Compensation Cess correctly`` (isInter
     let raw = createInvoice None None None None sellerGstin sellerState (Some buyerGstin) (Some buyerState) false igst cgst sgst (Some expectedCess) "8703" rate (Some cessRate)
     let res = Compiler.compile raw
     
-    let errors = res.Results |> List.filter (fun v -> v.Outcome = Fail)
+    let errors = res.Envelope.Results |> List.filter (fun v -> v.Outcome = Fail)
     if errors.Length > 0 then
         for e in errors do
-            printfn "Violation: %s - %s" e.Rule e.Description
+            printfn "Violation: %s - %s" e.RuleId (defaultArg e.Evidence "")
         false
     else true
 
@@ -166,10 +166,10 @@ let ``DIVE 05: Credit Note without Original Invoice references must fail`` (isIn
     let raw = createInvoice (Some "CRN") None None None sellerGstin sellerState (Some buyerGstin) (Some buyerState) false igst cgst sgst None "9983" 18m None
     let res = Compiler.compile raw
     
-    let errors = res.Results |> List.filter (fun v -> v.Outcome = Fail)
+    let errors = res.Envelope.Results |> List.filter (fun v -> v.Outcome = Fail)
     
     // Engine must catch CDN_ORIGINAL_INV
-    errors |> List.exists (fun e -> e.Rule = "CDN_ORIGINAL_INV")
+    errors |> List.exists (fun e -> e.RuleId = "CDN_ORIGINAL_INV")
 
 [<Property>]
 let ``DIVE 06: Credit Note with Original Invoice references must pass`` (isInterstate: bool) =
@@ -188,10 +188,10 @@ let ``DIVE 06: Credit Note with Original Invoice references must pass`` (isInter
     let raw = createInvoice (Some "CRN") (Some "ORIG-INV-123") (Some "2026-06-10") None sellerGstin sellerState (Some buyerGstin) (Some buyerState) false igst cgst sgst None "9983" 18m None
     let res = Compiler.compile raw
     
-    let errors = res.Results |> List.filter (fun v -> v.Outcome = Fail)
+    let errors = res.Envelope.Results |> List.filter (fun v -> v.Outcome = Fail)
     if errors.Length > 0 then
         for e in errors do
-            printfn "Violation: %s - %s" e.Rule e.Description
+            printfn "Violation: %s - %s" e.RuleId (defaultArg e.Evidence "")
         false
     else true
 
@@ -214,10 +214,10 @@ let ``DIVE 07: Invalid IRN length/format must fail`` (isInterstate: bool) =
     let raw = createInvoice None None None (Some badIrn) sellerGstin sellerState (Some buyerGstin) (Some buyerState) false igst cgst sgst None "9983" 18m None
     let res = Compiler.compile raw
     
-    let errors = res.Results |> List.filter (fun v -> v.Outcome = Fail)
+    let errors = res.Envelope.Results |> List.filter (fun v -> v.Outcome = Fail)
     
     // Engine must catch IRN_FORMAT
-    errors |> List.exists (fun e -> e.Rule = "IRN_FORMAT")
+    errors |> List.exists (fun e -> e.RuleId = "IRN_FORMAT")
 
 [<Property>]
 let ``DIVE 08: Valid 64-char hex IRN must pass`` (isInterstate: bool) =
@@ -236,10 +236,10 @@ let ``DIVE 08: Valid 64-char hex IRN must pass`` (isInterstate: bool) =
     let raw = createInvoice None None None (Some goodIrn) sellerGstin sellerState (Some buyerGstin) (Some buyerState) false igst cgst sgst None "9983" 18m None
     let res = Compiler.compile raw
     
-    let errors = res.Results |> List.filter (fun v -> v.Outcome = Fail)
+    let errors = res.Envelope.Results |> List.filter (fun v -> v.Outcome = Fail)
     if errors.Length > 0 then
         for e in errors do
-            printfn "Violation: %s - %s" e.Rule e.Description
+            printfn "Violation: %s - %s" e.RuleId (defaultArg e.Evidence "")
         false
     else true
 
@@ -258,9 +258,9 @@ let ``DIVE 09: Domestic GSTIN with valid checksum but invalid PAN structure must
     let raw = createInvoice None None None None sellerGstin sellerState (Some buyerGstin) (Some buyerState) false igst cgst sgst None "9983" 18m None
     let res = Compiler.compile raw
     
-    let errors = res.Results |> List.filter (fun v -> v.Outcome = Fail)
+    let errors = res.Envelope.Results |> List.filter (fun v -> v.Outcome = Fail)
     // Engine must catch invalid format despite correct checksum
-    errors |> List.exists (fun e -> e.Rule = "GSTIN_FORMAT" || e.Description.Contains("GSTIN"))
+    errors |> List.exists (fun e -> e.RuleId = "GSTIN_FORMAT" || (defaultArg e.Evidence "").Contains("GSTIN"))
 
 [<Property>]
 let ``DIVE 10: Explicit Place of Supply dictates tax treatment for unregistered B2C (IGST)`` () =
@@ -283,7 +283,7 @@ let ``DIVE 10: Explicit Place of Supply dictates tax treatment for unregistered 
     }
     let res = Compiler.compile raw
     // Must pass (interstate logic used because Seller=29, POS=33)
-    let errors = res.Results |> List.filter (fun v -> v.Outcome = Fail)
+    let errors = res.Envelope.Results |> List.filter (fun v -> v.Outcome = Fail)
     errors.Length = 0
 
 [<Property>]
@@ -306,5 +306,5 @@ let ``DIVE 11: Missing POS for unregistered B2C yields UNKNOWN`` () =
         ]
     }
     let res = Compiler.compile raw
-    res.Results |> List.exists (fun v -> v.Rule = "PLACE_OF_SUPPLY_UNKNOWN" && v.Outcome = Unknown)
+    res.Envelope.Results |> List.exists (fun v -> v.RuleId = "PLACE_OF_SUPPLY_UNKNOWN" && v.Outcome = Unknown)
 

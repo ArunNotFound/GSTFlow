@@ -15,28 +15,28 @@ let compileInvoice (jsonString: string) : obj =
         let result = Compiler.compile rawInvoice
         match result.IR with
         | Some ir ->
-            let gstr1 = Generators.emitGstr1Json ir
-            let proof = Generators.emitProofReport ir
+            let summary = Generators.emitSummaryJson ir
+            let proof = Generators.emitValidationReport ir
             {|
                 success = true
-                gstr1 = gstr1
+                summary = summary
                 proof = proof
-                violations = result.Violations |> Array.ofList
+                envelope = CanonicalJson.serializeEnvelope result.Envelope
                 error = null
             |} |> box
         | None ->
             {|
                 success = false
-                gstr1 = null
+                summary = null
                 proof = null
-                violations = result.Violations |> Array.ofList
+                envelope = CanonicalJson.serializeEnvelope result.Envelope
                 error = "Validation failed"
             |} |> box
     | Error err ->
         {|
             success = false
-            gstr1 = null
+            summary = null
             proof = null
-            violations = [||]
+            envelope = null
             error = err
         |} |> box

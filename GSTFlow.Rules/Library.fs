@@ -39,17 +39,33 @@ type RuleOutcome =
     | Fail
 
 type RuleResult = {
-    Rule: string
-    Description: string
+    RuleId: string
     Outcome: RuleOutcome
+    MessageKey: string
+    Evidence: string option
+    Source: string
+    RegulationReference: string option
+}
+
+type VerdictEnvelope = {
+    SchemaVersion: string
+    EngineVersion: string
+    RuleSetVersion: string
+    InvoiceHash: string
+    Results: RuleResult list
+    OverallOutcome: RuleOutcome
 }
 
 type CompilationResult = {
     IR: GSTCanonicalIR option
-    Results: RuleResult list
+    Envelope: VerdictEnvelope
 }
 
 module Compiler =
+    
+    let private failRule id msg = { RuleId = id; Outcome = Fail; MessageKey = id; Evidence = Some msg; Source = "Compiler"; RegulationReference = None }
+    let private warnRule id msg = { RuleId = id; Outcome = Warning; MessageKey = id; Evidence = Some msg; Source = "Compiler"; RegulationReference = None }
+    let private unknownRule id msg = { RuleId = id; Outcome = Unknown; MessageKey = id; Evidence = Some msg; Source = "Compiler"; RegulationReference = None }
 
     let validStateCodes = 
         Set.ofList ([ for i in 1..38 -> sprintf "%02d" i ] @ [ "97"; "99" ])
@@ -64,11 +80,11 @@ module Compiler =
         match GSTIN.create raw.Gstin with
         | Ok g ->
             if raw.Gstin.Substring(0, 2) <> raw.StateCode then
-                Error { Rule = "GSTIN_STATE_MATCH"; Description = sprintf "%s StateCode '%s' does not match GSTIN prefix '%s'" role raw.StateCode (raw.Gstin.Substring(0, 2)); Outcome = Fail }
+                Error (failRule "GSTIN_STATE_MATCH" (sprintf "%s StateCode '%s' does not match GSTIN prefix '%s'" role raw.StateCode (raw.Gstin.Substring(0, 2))))
             else
                 let isSez = match raw.IsSez with Some x -> x | None -> false
                 Ok { Party.Gstin = g; Party.StateCode = raw.StateCode; Party.IsSez = isSez }
-        | Error e -> Error { Rule = "GSTIN_FORMAT"; Description = sprintf "%s GSTIN '%s' is invalid: %s" role raw.Gstin e; Outcome = Fail }
+        | Error e -> Error (failRule "GSTIN_FORMAT" (sprintf "%s GSTIN '%s' is invalid: %s" role raw.Gstin e))
 
     let private isRcmHsn (hsn: string) =
         // GTA, Legal, Sponsorship, Security, etc.
@@ -79,10 +95,10 @@ module Compiler =
         let mutable violations = []
 
         if not (isValidHsn item.Hsn) then
-            violations <- { Rule = "HSN_FORMAT"; Description = sprintf "HSN '%s' must be exactly 4, 6, or 8 digits" item.Hsn; Outcome = Fail } :: violations
+            violations <- failRule "HSN_FORMAT" (sprintf "HSN '%s' must be exactly 4, 6, or 8 digits" item.Hsn) :: violations
             
         if not (validRateSlabs.Contains item.GstRate) then
-            violations <- { Rule = "RATE_SLAB"; Description = sprintf "GST Rate %M is not a valid Indian slab (0, 0.1, 0.25, 1.5, 3, 5, 12, 18, 28)" item.GstRate; Outcome = Fail } :: violations
+            violations <- failRule "RATE_SLAB" (sprintf "GST Rate %M is not a valid Indian slab (0, 0.1, 0.25, 1.5, 3, 5, 12, 18, 28)" item.GstRate) :: violations
 
         // Section 170: Rounding to the nearest Rupee applies at the total level, but item-level tax should be mathematically accurate to 2 decimals.
         let expectedTax = Math.Round(item.TaxableValue * (item.GstRate / 100m), 2)
@@ -91,30 +107,30 @@ module Compiler =
 
         if isInterstate then
             if item.Tax.Cgst > 0m || item.Tax.Sgst > 0m then
-                violations <- { Rule = "IGST_CGST_LAW"; Description = "Interstate supply cannot have CGST or SGST"; Outcome = Fail } :: violations
+                violations <- failRule "IGST_CGST_LAW" "Interstate supply cannot have CGST or SGST" :: violations
             
             if not isRcmExempt && Math.Abs(item.Tax.Igst - expectedTax) > 0.5m then
-                violations <- { Rule = "TAX_AMOUNT"; Description = sprintf "Expected IGST approx %M but got %M (failed Sec 170 / item math)" expectedTax item.Tax.Igst; Outcome = Fail } :: violations
+                violations <- failRule "TAX_AMOUNT" (sprintf "Expected IGST approx %M but got %M (failed Sec 170 / item math)" expectedTax item.Tax.Igst) :: violations
         else
             if item.Tax.Igst > 0m then
-                violations <- { Rule = "IGST_CGST_LAW"; Description = "Intrastate supply cannot have IGST"; Outcome = Fail } :: violations
+                violations <- failRule "IGST_CGST_LAW" "Intrastate supply cannot have IGST" :: violations
             
             let expectedSplit = Math.Round(expectedTax / 2m, 2)
             if not isRcmExempt && (Math.Abs(item.Tax.Cgst - expectedSplit) > 0.5m || Math.Abs(item.Tax.Sgst - expectedSplit) > 0.5m) then
-                violations <- { Rule = "TAX_AMOUNT"; Description = sprintf "Expected CGST/SGST approx %M but got C:%M S:%M" expectedSplit item.Tax.Cgst item.Tax.Sgst; Outcome = Fail } :: violations
+                violations <- failRule "TAX_AMOUNT" (sprintf "Expected CGST/SGST approx %M but got C:%M S:%M" expectedSplit item.Tax.Cgst item.Tax.Sgst) :: violations
                 
         if isRcmExempt then
-            violations <- { Rule = "REVIEW_REQUIRED"; Description = sprintf "Taxes are zero for HSN '%s' - Possible Reverse Charge Mechanism (RCM), review required." item.Hsn; Outcome = Unknown } :: violations
+            violations <- unknownRule "REVIEW_REQUIRED" (sprintf "Taxes are zero for HSN '%s' - Possible Reverse Charge Mechanism (RCM), review required." item.Hsn) :: violations
             
         match item.CessRate, item.Tax.Cess with
         | Some crate, Some cval ->
             let expectedCess = Math.Round(item.TaxableValue * (crate / 100m), 2)
             if Math.Abs(cval - expectedCess) > 0.5m then
-                violations <- { Rule = "CESS_ARITHMETIC"; Description = sprintf "Expected Cess approx %M but got %M" expectedCess cval; Outcome = Fail } :: violations
+                violations <- failRule "CESS_ARITHMETIC" (sprintf "Expected Cess approx %M but got %M" expectedCess cval) :: violations
         | None, Some cval when cval > 0m ->
-            violations <- { Rule = "CESS_ARITHMETIC"; Description = "Cess amount provided but no CessRate specified"; Outcome = Fail } :: violations
+            violations <- failRule "CESS_ARITHMETIC" "Cess amount provided but no CessRate specified" :: violations
         | Some _, None ->
-            violations <- { Rule = "CESS_ARITHMETIC"; Description = "CessRate provided but no Cess amount specified"; Outcome = Fail } :: violations
+            violations <- failRule "CESS_ARITHMETIC" "CessRate provided but no Cess amount specified" :: violations
         | _ -> ()
 
         violations
@@ -133,26 +149,26 @@ module Compiler =
             | Some "DBN" -> DBN
             | Some "INV" | None -> INV
             | Some other ->
-                violations <- { Rule = "DOC_TYPE"; Description = sprintf "Invalid DocumentType '%s'" other; Outcome = Fail } :: violations
+                violations <- failRule "DOC_TYPE" (sprintf "Invalid DocumentType '%s'" other) :: violations
                 INV
 
         match docType with
         | CRN | DBN ->
             if raw.OriginalInvoiceNumber.IsNone || raw.OriginalInvoiceDate.IsNone then
-                violations <- { Rule = "CDN_ORIGINAL_INV"; Description = "Credit/Debit Notes require OriginalInvoiceNumber and OriginalInvoiceDate"; Outcome = Fail } :: violations
+                violations <- failRule "CDN_ORIGINAL_INV" "Credit/Debit Notes require OriginalInvoiceNumber and OriginalInvoiceDate" :: violations
         | INV -> ()
         
         match raw.Irn with
         | Some irn ->
             if irn.Length <> 64 || not (System.Text.RegularExpressions.Regex.IsMatch(irn, "^[a-fA-F0-9]{64}$")) then
-                violations <- { Rule = "IRN_FORMAT"; Description = "IRN must be exactly 64 hexadecimal characters"; Outcome = Fail } :: violations
+                violations <- failRule "IRN_FORMAT" "IRN must be exactly 64 hexadecimal characters" :: violations
         | None -> ()
 
         let buyerRes = 
             match raw.Buyer with
             | Some b when String.IsNullOrWhiteSpace(b.Gstin) -> 
                 if not (validStateCodes.Contains b.StateCode) then
-                    let err = { Rule = "STATE_CODE"; Description = sprintf "Buyer State Code '%s' is not in the valid vocabulary (01-38, 97, 99)" b.StateCode; Outcome = Fail }
+                    let err = failRule "STATE_CODE" (sprintf "Buyer State Code '%s' is not in the valid vocabulary (01-38, 97, 99)" b.StateCode)
                     violations <- err :: violations
                     Some (Error err)
                 else
@@ -167,8 +183,16 @@ module Compiler =
                     Some (Error e)
             | None -> None
 
-        if violations.Length > 0 then
-            { IR = None; Results = violations }
+        if violations.Length > 0 && violations |> List.exists (fun v -> v.Outcome = Fail) then
+            let env = {
+                SchemaVersion = "1.0.0"
+                EngineVersion = "1.0.0"
+                RuleSetVersion = "2026.07.10"
+                InvoiceHash = "NOT_HASHED_YET"
+                Results = violations
+                OverallOutcome = Fail
+            }
+            { IR = None; Envelope = env }
         else
             let seller = match sellerRes with Ok s -> s | _ -> failwith "unreachable"
             let buyer = match buyerRes with Some (Ok b) -> Some b | _ -> None
@@ -177,13 +201,13 @@ module Compiler =
                 match raw.PlaceOfSupply with
                 | Some p when validStateCodes.Contains p -> p
                 | Some p -> 
-                    violations <- { Rule = "PLACE_OF_SUPPLY"; Description = sprintf "Invalid PlaceOfSupply '%s'" p; Outcome = Fail } :: violations
+                    violations <- failRule "PLACE_OF_SUPPLY" (sprintf "Invalid PlaceOfSupply '%s'" p) :: violations
                     p
                 | None ->
                     match buyer with
                     | Some b when GSTIN.value b.Gstin <> "URP" -> b.StateCode
                     | _ -> 
-                        violations <- { Rule = "PLACE_OF_SUPPLY_UNKNOWN"; Description = "Place of supply cannot be safely derived for unregistered buyer without explicit POS"; Outcome = Unknown } :: violations
+                        violations <- unknownRule "PLACE_OF_SUPPLY_UNKNOWN" "Place of supply cannot be safely derived for unregistered buyer without explicit POS" :: violations
                         "UNKNOWN"
                 
             let isInterstate = 
@@ -214,10 +238,26 @@ module Compiler =
             // We flag a WARNING if the final invoice total is not rounded.
             // Telecom operators (Airtel, Jio) do not round their bills. If we block this, we reject all Wi-Fi expenses.
             if totalInvoiceValue % 1m <> 0m then
-                 violations <- { Rule = "SEC_170_ROUNDING"; Description = "Section 170 CGST Act: Final invoice total must be rounded off to the nearest Rupee. Note: Telecom operators often ignore this."; Outcome = Warning } :: violations
+                 violations <- warnRule "SEC_170_ROUNDING" "Section 170 CGST Act: Final invoice total must be rounded off to the nearest Rupee. Note: Telecom operators often ignore this." :: violations
                  
+            let determineOutcome (v: RuleResult list) =
+                if v.Length = 0 then Pass
+                elif v |> List.exists (fun x -> x.Outcome = Fail) then Fail
+                elif v |> List.exists (fun x -> x.Outcome = Unknown) then Unknown
+                elif v |> List.exists (fun x -> x.Outcome = NotSupported) then NotSupported
+                else Warning
+
+            let envelope = {
+                SchemaVersion = "1.0.0"
+                EngineVersion = "1.0.0"
+                RuleSetVersion = "2026.07.10"
+                InvoiceHash = "NOT_HASHED_YET"
+                Results = violations
+                OverallOutcome = determineOutcome violations
+            }
+
             if violations |> List.exists (fun v -> v.Outcome = Fail) then
-                { IR = None; Results = violations }
+                { IR = None; Envelope = envelope }
             else
                 let validItems = raw.Items |> List.map (fun i -> { InvoiceItem.Hsn = i.Hsn; InvoiceItem.TaxableValue = i.TaxableValue; InvoiceItem.GstRate = i.GstRate; InvoiceItem.CessRate = i.CessRate; InvoiceItem.Tax = i.Tax })
                 let ir = {
@@ -236,4 +276,4 @@ module Compiler =
                     PlaceOfSupply = pos
                     IsInterstate = isInterstate
                 }
-                { IR = Some ir; Results = violations }
+                { IR = Some ir; Envelope = envelope }

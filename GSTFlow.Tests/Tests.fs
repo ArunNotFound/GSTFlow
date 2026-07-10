@@ -87,7 +87,7 @@ let ``Law: Interstate supply must absolutely reject local taxes`` (cgst: float) 
     let result = Compiler.compile raw
     
     if cgstVal > 0m || sgstVal > 0m then
-        result.Results |> List.exists (fun v -> v.Rule = "IGST_CGST_LAW")
+        result.Envelope.Results |> List.exists (fun v -> v.RuleId = "IGST_CGST_LAW")
     else true
 
 [<Property>]
@@ -100,7 +100,7 @@ let ``Law: Intrastate supply must absolutely reject integrated tax`` (igst: floa
     let result = Compiler.compile raw
     
     if igstVal > 0m then
-        result.Results |> List.exists (fun v -> v.Rule = "IGST_CGST_LAW")
+        result.Envelope.Results |> List.exists (fun v -> v.RuleId = "IGST_CGST_LAW")
     else true
 
 [<Property>]
@@ -114,5 +114,5 @@ let ``Law: B2C supply implicitly binds Place Of Supply to Seller State (Intrasta
     
     // If it's intrastate, it must reject IGST. We prove it's treated as Intrastate.
     if igstVal > 0m then
-        result.Results |> List.exists (fun v -> v.Rule = "IGST_CGST_LAW")
+        result.Envelope.Results |> List.exists (fun v -> v.RuleId = "IGST_CGST_LAW")
     else true

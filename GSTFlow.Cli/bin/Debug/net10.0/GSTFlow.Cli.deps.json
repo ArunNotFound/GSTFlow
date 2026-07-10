@@ -154,7 +154,8 @@
         "dependencies": {
           "FSharp.Core": "10.1.301",
           "GSTFlow.Core": "1.0.0",
-          "GSTFlow.Rules": "1.0.0"
+          "GSTFlow.Rules": "1.0.0",
+          "Thoth.Json.Net": "12.0.0"
         },
         "runtime": {
           "GSTFlow.Emit.dll": {
