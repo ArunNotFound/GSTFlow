@@ -19,8 +19,11 @@ type RawInvoiceItem = {
 }
 
 type RawInvoice = {
+    DocumentType: string option
     InvoiceNumber: string
     InvoiceDate: string
+    OriginalInvoiceNumber: string option
+    OriginalInvoiceDate: string option
     Seller: RawParty
     Buyer: RawParty option
     Items: RawInvoiceItem list
@@ -115,6 +118,21 @@ module Compiler =
         | Error e -> violations <- e :: violations
         | _ -> ()
 
+        let docType =
+            match raw.DocumentType with
+            | Some "CRN" -> CRN
+            | Some "DBN" -> DBN
+            | Some "INV" | None -> INV
+            | Some other ->
+                violations <- { Rule = "DOC_TYPE"; Description = sprintf "Invalid DocumentType '%s'" other; IsError = true } :: violations
+                INV
+
+        match docType with
+        | CRN | DBN ->
+            if raw.OriginalInvoiceNumber.IsNone || raw.OriginalInvoiceDate.IsNone then
+                violations <- { Rule = "CDN_ORIGINAL_INV"; Description = "Credit/Debit Notes require OriginalInvoiceNumber and OriginalInvoiceDate"; IsError = true } :: violations
+        | INV -> ()
+
         let buyerRes = 
             match raw.Buyer with
             | Some b when String.IsNullOrWhiteSpace(b.Gstin) -> 
@@ -181,8 +199,11 @@ module Compiler =
                 let validItems = raw.Items |> List.map (fun i -> { InvoiceItem.Hsn = i.Hsn; InvoiceItem.TaxableValue = i.TaxableValue; InvoiceItem.GstRate = i.GstRate; InvoiceItem.CessRate = i.CessRate; InvoiceItem.Tax = i.Tax })
                 let ir = {
                     Invoice = {
+                        DocumentType = docType
                         InvoiceNumber = raw.InvoiceNumber
                         InvoiceDate = raw.InvoiceDate
+                        OriginalInvoiceNumber = raw.OriginalInvoiceNumber
+                        OriginalInvoiceDate = raw.OriginalInvoiceDate
                         Seller = seller
                         Buyer = buyer
                         Items = validItems

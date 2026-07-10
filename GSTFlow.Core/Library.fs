@@ -75,9 +75,17 @@ type InvoiceItem = {
     Tax: TaxAmount
 }
 
+type DocumentType =
+    | INV
+    | CRN
+    | DBN
+
 type Invoice = {
+    DocumentType: DocumentType
     InvoiceNumber: string
     InvoiceDate: string
+    OriginalInvoiceNumber: string option
+    OriginalInvoiceDate: string option
     Seller: Party
     Buyer: Party option
     Items: InvoiceItem list

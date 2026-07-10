@@ -51,8 +51,11 @@ let ``Law: Falsifier - Flipping any character in a valid GSTIN to a different ch
 
 let createDummyInvoice (sellerGstin: string) (sellerState: string) (buyerGstin: string option) (buyerState: string option) (igst: decimal) (cgst: decimal) (sgst: decimal) =
     {
+        DocumentType = None
         InvoiceNumber = "TEST-001"
         InvoiceDate = "2026-01-01"
+        OriginalInvoiceNumber = None
+        OriginalInvoiceDate = None
         Seller = { Gstin = sellerGstin; StateCode = sellerState; IsSez = None }
         Buyer = 
             match buyerGstin, buyerState with
