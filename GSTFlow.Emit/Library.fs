@@ -4,7 +4,7 @@ open GSTFlow.Core
 open GSTFlow.Rules
 
 module Generators =
-    let emitGstr1Json (ir: GSTCanonicalIR) =
+    let emitSummaryJson (ir: GSTCanonicalIR) =
         // Simplistic JSON payload for MVP
         let supplyTypeStr = match ir.DerivedSupplyType with B2B -> "B2B" | B2C -> "B2C"
         let taxType = if ir.IsInterstate then "IGST" else "CGST_SGST"
@@ -17,7 +17,7 @@ module Generators =
   "itemsCount": {ir.Invoice.Items.Length}
 }}"""
 
-    let emitProofReport (ir: GSTCanonicalIR) =
+    let emitValidationReport (ir: GSTCanonicalIR) =
         let expectedTax = if ir.IsInterstate then "IGST" else "CGST+SGST"
         let hasIgst = ir.Invoice.Items |> List.exists (fun i -> i.Tax.Igst > 0m)
         let hasCgst = ir.Invoice.Items |> List.exists (fun i -> i.Tax.Cgst > 0m)
@@ -31,12 +31,12 @@ module Generators =
         let status = if expectedTax = actualTax then "Passed" else "Failed"
         let grade = if status = "Passed" then "Exact" else "Approximate"
 
-        $"""# GSTFlow Proof Report
+        $"""# GSTFlow Validation Report
 
 ## Invoice {ir.Invoice.InvoiceNumber}
 
 Canonical GST IR: {grade}
-GSTR-1 JSON: {grade}
+Summary JSON: {grade}
 
 ## Verified Tax Logic
 

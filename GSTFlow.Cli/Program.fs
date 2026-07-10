@@ -10,14 +10,14 @@ open GSTFlow.Emit
 
 type CliArguments =
     | Validate of path:string
-    | Emit_Gstr1 of path:string
+    | Emit_Summary of path:string
     | Prove of path:string
     interface IArgParserTemplate with
         member s.Usage =
             match s with
             | Validate _ -> "Validate an invoice JSON file against GST rules."
-            | Emit_Gstr1 _ -> "Emit the GSTR-1 payload for the given invoice JSON file."
-            | Prove _ -> "Emit the PROOF.md report for the given invoice JSON file."
+            | Emit_Summary _ -> "Emit the Summary JSON payload for the given invoice JSON file."
+            | Prove _ -> "Emit the VALIDATION_REPORT.md for the given invoice JSON file."
 
 let readInvoice path =
     if not (File.Exists path) then
@@ -54,23 +54,23 @@ let main argv =
                 0
             | None ->
                 printfn "❌ Validation Failed:"
-                for v in res.Violations do
+                for v in res.Results do
                     printfn "  [%s] %s" v.Rule v.Description
                 1
 
-        elif results.Contains(Emit_Gstr1) then
-            let path = results.GetResult(Emit_Gstr1)
+        elif results.Contains(Emit_Summary) then
+            let path = results.GetResult(Emit_Summary)
             let rawInvoice = readInvoice path
             let res = Compiler.compile rawInvoice
             
             match res.IR with
             | Some ir ->
-                let gstr1 = Generators.emitGstr1Json ir
-                printfn "%s" gstr1
+                let summary = Generators.emitSummaryJson ir
+                printfn "%s" summary
                 0
             | None ->
-                printfn "Error: Cannot emit GSTR-1 for invalid invoice."
-                for v in res.Violations do
+                printfn "Error: Cannot emit Summary for invalid invoice."
+                for v in res.Results do
                     printfn "  [%s] %s" v.Rule v.Description
                 1
 
@@ -81,12 +81,12 @@ let main argv =
             
             match res.IR with
             | Some ir ->
-                let proof = Generators.emitProofReport ir
+                let proof = Generators.emitValidationReport ir
                 printfn "%s" proof
                 0
             | None ->
-                printfn "Error: Cannot emit PROOF for invalid invoice."
-                for v in res.Violations do
+                printfn "Error: Cannot emit VALIDATION REPORT for invalid invoice."
+                for v in res.Results do
                     printfn "  [%s] %s" v.Rule v.Description
                 1
         else

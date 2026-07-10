@@ -110,11 +110,11 @@ module Compiler =
         | Some crate, Some cval ->
             let expectedCess = Math.Round(item.TaxableValue * (crate / 100m), 2)
             if Math.Abs(cval - expectedCess) > 0.5m then
-                violations <- { Rule = "TAX_AMOUNT"; Description = sprintf "Expected Cess approx %M but got %M" expectedCess cval; Outcome = Fail } :: violations
+                violations <- { Rule = "CESS_ARITHMETIC"; Description = sprintf "Expected Cess approx %M but got %M" expectedCess cval; Outcome = Fail } :: violations
         | None, Some cval when cval > 0m ->
-            violations <- { Rule = "TAX_AMOUNT"; Description = "Cess amount provided but no CessRate specified"; Outcome = Fail } :: violations
+            violations <- { Rule = "CESS_ARITHMETIC"; Description = "Cess amount provided but no CessRate specified"; Outcome = Fail } :: violations
         | Some _, None ->
-            violations <- { Rule = "TAX_AMOUNT"; Description = "CessRate provided but no Cess amount specified"; Outcome = Fail } :: violations
+            violations <- { Rule = "CESS_ARITHMETIC"; Description = "CessRate provided but no Cess amount specified"; Outcome = Fail } :: violations
         | _ -> ()
 
         violations
