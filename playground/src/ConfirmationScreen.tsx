@@ -13,10 +13,10 @@ export default function ConfirmationScreen({ extractedData, onConfirm, onCancel 
   const handleConfirm = () => {
     // Strip confidence scores and generate valid JSON for the compiler
     const cleanJson = JSON.stringify({
-      InvoiceNumber: "EXTRACTED-001",
-      InvoiceDate: "2026-07-09",
-      Seller: { Gstin: data.Seller.Gstin, StateCode: data.Seller.Gstin.substring(0, 2) },
-      Buyer: { Gstin: data.Buyer.Gstin, StateCode: data.Buyer.Gstin.substring(0, 2) },
+      InvoiceNumber: data.InvoiceNumber?.value || "EXTRACTED-001",
+      InvoiceDate: data.InvoiceDate?.value || "2026-07-09",
+      Seller: { Gstin: data.Seller.Gstin, StateCode: data.Seller.StateCode },
+      Buyer: { Gstin: data.Buyer.Gstin, StateCode: data.Buyer.StateCode },
       Items: data.Items.map((i: any) => ({
         Hsn: i.Hsn, TaxableValue: i.TaxableValue, GstRate: i.GstRate, Tax: i.Tax
       }))
@@ -38,6 +38,44 @@ export default function ConfirmationScreen({ extractedData, onConfirm, onCancel 
       </div>
 
       <div className="space-y-6 flex-1">
+        {/* Invoice Number & Date Fields */}
+        <div className="flex space-x-4">
+          <div className="bg-gray-800/50 p-5 rounded-xl border border-gray-700 flex-1">
+            <div className="flex justify-between items-center mb-3">
+              <label className="text-sm font-semibold text-gray-300">Invoice No.</label>
+              <div className={`text-xs px-2 py-1 rounded-full border ${confidenceColor(data.InvoiceNumber?.confidence || 0)}`}>
+                {Math.round((data.InvoiceNumber?.confidence || 0) * 100)}%
+              </div>
+            </div>
+            <div className="flex items-center bg-gray-900 rounded-lg border border-gray-700 focus-within:border-emerald-500 overflow-hidden">
+              <input 
+                type="text" 
+                value={data.InvoiceNumber?.value || ""}
+                onChange={(e) => setData({ ...data, InvoiceNumber: { ...data.InvoiceNumber, value: e.target.value }})}
+                className="flex-1 bg-transparent border-none text-white px-4 py-3 focus:outline-none font-mono"
+              />
+              <Edit2 className="w-4 h-4 text-gray-500 mr-4" />
+            </div>
+          </div>
+          <div className="bg-gray-800/50 p-5 rounded-xl border border-gray-700 flex-1">
+            <div className="flex justify-between items-center mb-3">
+              <label className="text-sm font-semibold text-gray-300">Date</label>
+              <div className={`text-xs px-2 py-1 rounded-full border ${confidenceColor(data.InvoiceDate?.confidence || 0)}`}>
+                {Math.round((data.InvoiceDate?.confidence || 0) * 100)}%
+              </div>
+            </div>
+            <div className="flex items-center bg-gray-900 rounded-lg border border-gray-700 focus-within:border-emerald-500 overflow-hidden">
+              <input 
+                type="text" 
+                value={data.InvoiceDate?.value || ""}
+                onChange={(e) => setData({ ...data, InvoiceDate: { ...data.InvoiceDate, value: e.target.value }})}
+                className="flex-1 bg-transparent border-none text-white px-4 py-3 focus:outline-none font-mono"
+              />
+              <Edit2 className="w-4 h-4 text-gray-500 mr-4" />
+            </div>
+          </div>
+        </div>
+
         {/* Seller Field */}
         <div className="bg-gray-800/50 p-5 rounded-xl border border-gray-700">
           <div className="flex justify-between items-center mb-3">

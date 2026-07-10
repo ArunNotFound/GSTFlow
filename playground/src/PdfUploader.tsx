@@ -17,17 +17,21 @@ export default function PdfUploader({ onExtract }: { onExtract: (extractedData: 
     setStatus('Loading PDF via pdf.js...');
 
     try {
-      const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-      
-      setStatus(`Extracting text from ${pdf.numPages} pages...`);
       let fullText = "";
-      
-      for (let i = 1; i <= pdf.numPages; i++) {
-        const page = await pdf.getPage(i);
-        const textContent = await page.getTextContent();
-        const pageText = textContent.items.map((item: any) => item.str).join(" ");
-        fullText += pageText + " ";
+
+      if (file.type === "text/plain" || file.name.endsWith(".md") || file.name.endsWith(".txt")) {
+        fullText = await file.text();
+      } else {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        
+        setStatus(`Extracting text from ${pdf.numPages} pages...`);
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const textContent = await page.getTextContent();
+          const pageText = textContent.items.map((item: any) => item.str).join(" ");
+          fullText += pageText + " ";
+        }
       }
 
       setStatus('Mapping extracted text to GST fields...');
@@ -37,14 +41,34 @@ export default function PdfUploader({ onExtract }: { onExtract: (extractedData: 
       const gstins = [...new Set(fullText.match(gstinRegex) || [])];
 
       const sellerGstin = gstins.length > 0 ? gstins[0] : "NOT_FOUND";
-      const buyerGstin = gstins.length > 1 ? gstins[1] : "NOT_FOUND";
+      const buyerGstin = gstins.length > 1 ? gstins[1] : sellerGstin !== "NOT_FOUND" ? sellerGstin : "NOT_FOUND";
+
+      // Date heuristic (DD/MM/YYYY or similar)
+      const dateRegex = /\b(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})\b/;
+      const dateMatch = fullText.match(dateRegex);
+      const invoiceDate = dateMatch ? dateMatch[1] : "YYYY-MM-DD";
+
+      // Invoice Number heuristic (often follows "No:" or "Inv:")
+      const invNoRegex = /(?:Invoice No|Inv No|Invoice Number)[\s:]*([A-Za-z0-9\-\/]+)/i;
+      const invNoMatch = fullText.match(invNoRegex);
+      const invoiceNumber = invNoMatch ? invNoMatch[1] : "INV-UNKNOWN";
 
       setIsExtracting(false);
       setStatus('');
 
       onExtract({
-        Seller: { Gstin: sellerGstin, confidence: sellerGstin !== "NOT_FOUND" ? 0.9 : 0.0 },
-        Buyer: { Gstin: buyerGstin, confidence: buyerGstin !== "NOT_FOUND" ? 0.7 : 0.0 },
+        InvoiceNumber: { value: invoiceNumber, confidence: invNoMatch ? 0.8 : 0.0 },
+        InvoiceDate: { value: invoiceDate, confidence: dateMatch ? 0.8 : 0.0 },
+        Seller: { 
+          Gstin: sellerGstin, 
+          StateCode: sellerGstin !== "NOT_FOUND" ? sellerGstin.substring(0, 2) : "00",
+          confidence: sellerGstin !== "NOT_FOUND" ? 0.9 : 0.0 
+        },
+        Buyer: { 
+          Gstin: buyerGstin, 
+          StateCode: buyerGstin !== "NOT_FOUND" ? buyerGstin.substring(0, 2) : "00",
+          confidence: buyerGstin !== "NOT_FOUND" && gstins.length > 1 ? 0.7 : 0.0 
+        },
         Items: [
           // Fallback dummy item for now until full tabular extraction is built
           { Hsn: "847130", TaxableValue: 100000, GstRate: 18, Tax: { Igst: 18000, Cgst: 0, Sgst: 0 }, confidence: 0.5 }
@@ -79,8 +103,8 @@ export default function PdfUploader({ onExtract }: { onExtract: (extractedData: 
               100% offline extraction. Your data never leaves the browser.
             </p>
             <label className="cursor-pointer bg-emerald-500 hover:bg-emerald-400 text-gray-900 font-bold py-3 px-6 rounded-lg shadow-lg shadow-emerald-500/20 transition-all inline-block">
-              Select PDF Document
-              <input type="file" accept="application/pdf" className="hidden" onChange={handleFileUpload} />
+              Select Document (PDF / TXT)
+              <input type="file" accept="application/pdf,text/plain,.md" className="hidden" onChange={handleFileUpload} />
             </label>
           </>
         )}
