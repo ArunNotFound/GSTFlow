@@ -24,3 +24,6 @@ TestResults.xmlsampleinvoices/
 
 *.cli.json
 *.fable.json
+out/
+bin/
+obj/
