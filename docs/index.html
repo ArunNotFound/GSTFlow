@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GSTFlow | CanonFlow Foundation</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar glass">
+        <div class="logo">
+            <span class="canon">CanonFlow</span>
+            <span class="foundation">Foundation</span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="#vision">The Trinity Vision</a></li>
+            <li><a href="#gstflow" class="active">GSTFlow</a></li>
+            <li><a href="#ediflow">EDIFlow</a></li>
+            <li>
+                <button id="theme-toggle" class="theme-btn">
+                    <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                </button>
+            </li>
+        </ul>
+    </nav>
+
+    <header class="hero" id="gstflow">
+        <div class="glow-orb orb-1"></div>
+        <div class="glow-orb orb-2"></div>
+        
+        <div class="hero-content">
+            <div class="badge">The Crucible of Indian Taxation</div>
+            <h1 class="title">Meet <span class="gradient-text">GSTFlow</span></h1>
+            <p class="subtitle">Compliance is not a database problem. It is a mathematical problem. GSTFlow is the absolute, offline, zero-latency engine built for the world's most complex tax jurisdiction.</p>
+            <div class="cta-group">
+                <a href="#get-started" class="btn primary">View the Engine</a>
+                <a href="#architecture" class="btn secondary">Read the Architecture</a>
+            </div>
+        </div>
+    </header>
+
+    <section class="features glass-section" id="vision">
+        <div class="section-header">
+            <h2>The <span class="gradient-text">One-Engine</span> Law</h2>
+            <p>Write the rule once. Run it natively on backend servers for massive throughput, and compile it directly into WebAssembly to validate offline in the browser. Zero drift.</p>
+        </div>
+        
+        <div class="feature-grid">
+            <div class="card glass-card">
+                <div class="icon">⚡</div>
+                <h3>Zero Latency</h3>
+                <p>By bypassing heavy generic databases and relying on pure compiled F# math, GSTFlow validates enormous payloads in sub-milliseconds.</p>
+            </div>
+            <div class="card glass-card">
+                <div class="icon">📦</div>
+                <h3>The Universal Envelope</h3>
+                <p>Every complex Indian tax rule resolves into the mathematically strict Canonical JSON VerdictEnvelope. No ambiguity. Just pure state.</p>
+            </div>
+            <div class="card glass-card">
+                <div class="icon">🛡️</div>
+                <h3>Absolute Provenance</h3>
+                <p>GSTFlow doesn't just reject an invoice. It cites the exact paragraph and section of the Indian GST Tax Code governing the violation.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="code-showcase" id="get-started">
+        <div class="code-wrapper glass">
+            <div class="window-controls">
+                <span class="dot red"></span>
+                <span class="dot yellow"></span>
+                <span class="dot green"></span>
+            </div>
+            <pre><code><span class="keyword">open</span> GSTFlow.Core.Verification
+
+<span class="keyword">let</span> envelope = <span class="type">VerdictEnvelope</span>.evaluate(invoicePayload)
+
+<span class="keyword">match</span> envelope.OverallOutcome <span class="keyword">with</span>
+| <span class="type">Fail</span> -> <span class="string">"Instant Mathematical Rejection."</span>
+| <span class="type">Pass</span> -> <span class="string">"Guaranteed Compliance."</span></code></pre>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2026 CanonFlow Foundation. Open Sourced under the MIT License.</p>
+    </footer>
+
+    <script>
+        const themeToggle = document.getElementById('theme-toggle');
+        const html = document.documentElement;
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            html.setAttribute('data-theme', currentTheme === 'dark' ? 'light' : 'dark');
+        });
+    </script>
+</body>
+</html>
