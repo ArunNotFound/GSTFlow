@@ -1,0 +1,49 @@
+```json
+{
+  "InvoiceNumber": null,
+  "InvoiceDate": null,
+  "Seller": {
+    "Gstin": "27AABCU9603R1ZM",
+    "StateCode": "MH"
+  },
+  "Buyer": {
+    "Gstin": "29GGGGG1314R9Z6",
+    "StateCode": "KA"
+  },
+  "Items": [
+    {
+      "Hsn": "9983",
+      "TaxableValue": 50000,
+      "GstRate": null,
+      "Tax": {
+        "Igst": null,
+        "Cgst": null,
+        "Sgst": null,
+        "Cess": null
+      }
+    },
+    {
+      "Hsn": "9983",
+      "TaxableValue": 20000,
+      "GstRate": null,
+      "Tax": {
+        "Igst": null,
+        "Cgst": null,
+        "Sgst": null,
+        "Cess": null
+      }
+    },
+    {
+      "Hsn": "9983",
+      "TaxableValue": 15000,
+      "GstRate": null,
+      "Tax": {
+        "Igst": null,
+        "Cgst": null,
+        "Sgst": null,
+        "Cess": null
+      }
+    }
+  ]
+}
+```
