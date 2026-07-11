@@ -34,21 +34,22 @@ A fully offline React application that runs the strict F# core entirely in your 
 
 ## 🧪 Capability Matrix
 
-| Feature / Domain Area | Status | Description |
-| :--- | :--- | :--- |
-| **GSTIN Integrity** | Supported | Mod-36 Checksum verification. |
-| **Place of Supply (POS)**| Supported | B2B intrastate/interstate deduction, OIDAR B2C handling. |
-| **Tax Split Mechanics** | Supported | Validates IGST vs CGST/SGST routing. |
-| **Invoice Sanity** | Supported | Null checks, rate checks, items present. |
-| **Batch Processing** | Supported | Native CLI processes multiple invoices concurrently with duplicate detection. |
-| **Reverse Charge (RCM)** | Supported | Automatic RCM derivation via HSN service codes (e.g., 9983). |
-| **SEZ / Export / Deemed Export** | Not Supported | Returns `NotSupported`. Never silently passes. |
-| **Credit / Debit Notes** | Structural only | Reference presence validated; reversal semantics not adjudicated. |
-| **IRN / E-Invoice** | Format only | Length/structure checked. **NOT** cryptographic signature verification. |
-| **E-Way Bill** | Not Supported | Out of scope. |
-| **GSTN Filing / Submission** | Never | Constitutional non-goal. GSTFlow validates; it never files. |
-| **HSN rate correctness** | Format only | HSN structure validated; rate-to-HSN applicability NOT verified. |
-| **Multi-currency** | Not Supported | INR only. |
+To provide clarity for accountants and auditors, here is the exact execution boundary of the GSTFlow engine:
+
+### ✅ Fully Supported (Mathematically Enforced)
+* **B2B & B2C Flow:** Normal Tax Invoices, Interstate/Intrastate deduction, B2C Small/Large, Place of Supply checks.
+* **Tax Mechanics:** IGST vs CGST+SGST splitting, Compensation Cess, Zero Tax, Mixed Tax Rates, Section 170 Rounding limits.
+* **Item Validation:** Reverse Charge (RCM) applicability, Nil-rated/Exempt items, Taxable value limits (no negatives).
+* **Sanity Checks:** GSTIN Mod-36 checksum, HSN/SAC format, State Code vocabularies, Missing mandatory fields.
+
+### ⚠️ Limited (Format & Structural Only)
+* **Credit / Debit Notes:** Validates `DOC_TYPE` and enforces `OriginalInvoiceNumber` presence, but does not adjudicate partial tax reduction math across documents.
+* **E-Invoice (IRN):** Validates the 64-character hex format but does not verify cryptographic signatures.
+
+### ❌ Unsupported (Safely Returns `Unknown` or `NotSupported`)
+* **Special Supplies:** SEZ (with/without LUT), Exports, Imports, Deemed Exports, Job Work, Branch Transfers, High Sea Sales.
+* **Complex Scenarios:** Composite/Mixed Supply, Foreign Currency, Non-GST Items, advanced Digital Goods POS logic.
+* **Filing & Lifecycle:** Revisions, Cancellations, Government Portal Submission (Constitutional non-goal).
 
 ## 🏆 Recent Combat Results (July 2026)
 
