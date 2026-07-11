@@ -12,11 +12,7 @@ module CanonicalJson =
 
     let encodeRuleOutcome (outcome: RuleOutcome) =
         match outcome with
-#if FABLE_COMPILER
-        | Pass -> Encode.string "PassFable"
-#else
-        | Pass -> Encode.string "PassCLI"
-#endif
+        | Pass -> Encode.string "Pass"
         | PassWithAssumptions -> Encode.string "PassWithAssumptions"
         | Warning -> Encode.string "Warning"
         | Unknown -> Encode.string "Unknown"

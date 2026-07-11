@@ -16,7 +16,7 @@ GSTFlow is built in strict **F#**. The semantic rules are written once.
 1. It compiles to a **Native AOT CLI** for CI/CD and backend infrastructure.
 2. It transpiles (via Fable) to pure **WebAssembly/JavaScript** to run 100% offline in the browser.
 
-Our CI pipeline guarantees that both environments yield byte-identical validation reports. **The laws do not drift.**
+Our CI pipeline verifies that both environments yield byte-identical validation reports. **The laws do not drift.** ([Demonstration of Agreement Test Catching Drift](https://github.com/ArunNotFound/GSTFlow/actions/runs/29142690319))
 
 ## 🚀 Modes of Operation
 
@@ -41,8 +41,14 @@ A fully offline React application that runs the strict F# core entirely in your 
 | **Tax Split Mechanics** | Supported | Validates IGST vs CGST/SGST routing. |
 | **Invoice Sanity** | Supported | Null checks, rate checks, items present. |
 | **Batch Processing** | Supported | Native CLI processes multiple invoices concurrently with duplicate detection. |
-| **GSTR-1 Emission** | Not Yet Supported | Generating government-ready filing payloads. |
 | **Reverse Charge (RCM)** | Supported | Automatic RCM derivation via HSN service codes (e.g., 9983). |
+| **SEZ / Export / Deemed Export** | Not Supported | Returns `NotSupported`. Never silently passes. |
+| **Credit / Debit Notes** | Structural only | Reference presence validated; reversal semantics not adjudicated. |
+| **IRN / E-Invoice** | Format only | Length/structure checked. **NOT** cryptographic signature verification. |
+| **E-Way Bill** | Not Supported | Out of scope. |
+| **GSTN Filing / Submission** | Never | Constitutional non-goal. GSTFlow validates; it never files. |
+| **HSN rate correctness** | Format only | HSN structure validated; rate-to-HSN applicability NOT verified. |
+| **Multi-currency** | Not Supported | INR only. |
 
 ## 🏆 Recent Combat Results (July 2026)
 
