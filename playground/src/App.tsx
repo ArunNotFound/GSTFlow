@@ -24,6 +24,30 @@ const translations: Record<string, { en: string, hi: string, hint_en: string, hi
     hi: "आपने दूसरे राज्य के ग्राहक को बिल दिया है, लेकिन स्थानीय टैक्स (CGST/SGST) लगाया है। इससे आपको जुर्माना लग सकता है। कृपया इसे IGST में बदलें।",
     hint_en: "Change CGST/SGST amounts to 0, and put the full tax in IGST.",
     hint_hi: "CGST/SGST को 0 करें, और पूरी टैक्स राशि को IGST में डालें।"
+  },
+  INV_SANITY_DATE: {
+    en: "Invoice date is missing.",
+    hi: "चालान की तारीख गायब है।",
+    hint_en: "Provide a valid invoice date.",
+    hint_hi: "मान्य चालान तारीख प्रदान करें।"
+  },
+  INV_SANITY_ITEMS: {
+    en: "No items found in the invoice.",
+    hi: "चालान में कोई आइटम नहीं मिला।",
+    hint_en: "An invoice must have at least one line item.",
+    hint_hi: "चालान में कम से कम एक आइटम होना चाहिए।"
+  },
+  INV_SANITY_NO: {
+    en: "Invoice number is missing.",
+    hi: "चालान नंबर गायब है।",
+    hint_en: "Provide a valid invoice number.",
+    hint_hi: "मान्य चालान नंबर प्रदान करें।"
+  },
+  PLACE_OF_SUPPLY_UNKNOWN: {
+    en: "Place of supply could not be determined.",
+    hi: "सप्लाई का स्थान निर्धारित नहीं किया जा सका।",
+    hint_en: "Ensure buyer GSTIN or explicit PlaceOfSupply is provided.",
+    hint_hi: "सुनिश्चित करें कि खरीदार का GSTIN या स्पष्ट PlaceOfSupply दिया गया है।"
   }
 };
 
@@ -65,15 +89,30 @@ export default function App() {
   let err = '';
   
   let violations: any[] = [];
+  let envelopeObj: any = null;
   
   try {
       const res = compileInvoice(jsonInput);
       if (res.success) {
-          gstr1 = res.gstr1;
+          gstr1 = res.summary;
           proof = res.proof;
+          if (res.envelope) envelopeObj = JSON.parse(res.envelope);
       } else {
           err = res.error;
-          violations = res.violations || [];
+          if (res.envelope) {
+              envelopeObj = JSON.parse(res.envelope);
+              violations = envelopeObj.Results
+                .filter((r: any) => r.Outcome === "Fail" || r.Outcome === "Unknown")
+                .map((r: any) => {
+                    const t = translations[r.Metadata.RuleId];
+                    const desc = t ? (lang === 'en' ? t.en : t.hi) : r.Metadata.MessageKey;
+                    return {
+                        Rule: r.Metadata.RuleId,
+                        Description: desc,
+                        RawDesc: r.Metadata.MessageKey
+                    };
+                });
+          }
       }
   } catch (e: any) {
       err = e.message;
@@ -198,7 +237,7 @@ export default function App() {
                              ) : null}
   
                              <div className="text-sm text-gray-300 bg-gray-900/50 p-2 rounded border border-gray-700/50 font-mono">
-                               {v.Description}
+                               {v.RawDesc || v.Description}
                              </div>
                            </div>
                          );
