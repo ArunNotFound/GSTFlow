@@ -1,4 +1,5 @@
 module GSTFlow.Cli.Program
+open GSTFlow.Core.Verification
 
 open System
 open System.IO
@@ -29,9 +30,9 @@ let readInvoice path =
     let jsonString = File.ReadAllText path
     let extra = Extra.empty |> Extra.withDecimal
     match Decode.Auto.fromString<RawInvoice>(jsonString, extra = extra) with
-    | Ok rawInvoice -> rawInvoice
-    | Error err ->
-        printfn "Error parsing JSON: %s" err
+    | Ok invoice -> (invoice, Hash.computeSha256 jsonString)
+    | Error msg ->
+        printfn "Error parsing JSON: %s" msg
         Environment.Exit(1)
         failwith "unreachable"
 
@@ -44,8 +45,8 @@ let main argv =
         
         if results.Contains(Validate) then
             let path = results.GetResult(Validate)
-            let rawInvoice = readInvoice path
-            let res = Compiler.compile rawInvoice
+            let (rawInvoice, hash) = readInvoice path
+            let res = Compiler.compile rawInvoice hash
             
             match res.IR with
             | Some ir ->
@@ -57,13 +58,13 @@ let main argv =
             | None ->
                 printfn "❌ Validation Failed:"
                 for v in res.Envelope.Results do
-                    printfn "  [%s] %s" v.RuleId (defaultArg v.Evidence "")
+                    printfn "  [%s] %s" v.Metadata.RuleId (match v.Evidence |> List.tryHead with | Some e -> defaultArg e.Value "" | None -> "")
                 1
 
         elif results.Contains(Emit_Summary) then
             let path = results.GetResult(Emit_Summary)
-            let rawInvoice = readInvoice path
-            let res = Compiler.compile rawInvoice
+            let (rawInvoice, hash) = readInvoice path
+            let res = Compiler.compile rawInvoice hash
             
             match res.IR with
             | Some ir ->
@@ -73,21 +74,21 @@ let main argv =
             | None ->
                 printfn "Error: Cannot emit Summary for invalid invoice."
                 for v in res.Envelope.Results do
-                    printfn "  [%s] %s" v.RuleId (defaultArg v.Evidence "")
+                    printfn "  [%s] %s" v.Metadata.RuleId (match v.Evidence |> List.tryHead with | Some e -> defaultArg e.Value "" | None -> "")
                 1
 
         elif results.Contains(Emit_Envelope) then
             let path = results.GetResult(Emit_Envelope)
-            let rawInvoice = readInvoice path
-            let res = Compiler.compile rawInvoice
+            let (rawInvoice, hash) = readInvoice path
+            let res = Compiler.compile rawInvoice hash
             let envelopeJson = CanonicalJson.serializeEnvelope res.Envelope
             printfn "%s" envelopeJson
             if res.Envelope.OverallOutcome = Fail then 1 else 0
 
         elif results.Contains(Prove) then
             let path = results.GetResult(Prove)
-            let rawInvoice = readInvoice path
-            let res = Compiler.compile rawInvoice
+            let (rawInvoice, hash) = readInvoice path
+            let res = Compiler.compile rawInvoice hash
             
             match res.IR with
             | Some ir ->
@@ -97,7 +98,7 @@ let main argv =
             | None ->
                 printfn "Error: Cannot emit VALIDATION REPORT for invalid invoice."
                 for v in res.Envelope.Results do
-                    printfn "  [%s] %s" v.RuleId (defaultArg v.Evidence "")
+                    printfn "  [%s] %s" v.Metadata.RuleId (match v.Evidence |> List.tryHead with | Some e -> defaultArg e.Value "" | None -> "")
                 1
         else
             printfn "%s" (parser.PrintUsage())

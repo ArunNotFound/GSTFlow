@@ -21,3 +21,6 @@ rad.json
 *.flf
 #Test results file
 TestResults.xmlsampleinvoices/
+
+*.cli.json
+*.fable.json

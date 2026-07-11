@@ -1,4 +1,5 @@
 module GSTFlow.Tests.MockDrillsSpecs
+open GSTFlow.Core.Verification
 
 open System
 open Xunit
@@ -54,12 +55,12 @@ let ``DIVE 01: Standard B2B Invoice math must pass`` (isInterstate: bool) =
     let sgst = if isInterstate then 0m else expectedTax / 2m
     
     let raw = createInvoice None None None None sellerGstin sellerState (Some buyerGstin) (Some buyerState) false igst cgst sgst None "9983" rate None
-    let res = Compiler.compile raw
+    let res = Compiler.compile raw "dummy-hash"
     
     let errors = res.Envelope.Results |> List.filter (fun v -> v.Outcome = Fail)
     if errors.Length > 0 then
         for e in errors do
-            printfn "Violation: %s - %s" e.RuleId (defaultArg e.Evidence "")
+            printfn "Violation: %s - %s" e.Metadata.RuleId (match e.Evidence |> List.tryHead with | Some ev -> defaultArg ev.Value "" | None -> "")
         false
     else true
 
@@ -82,12 +83,12 @@ let ``DIVE 02: Reverse Charge (RCM) GTA Services must allow 0 tax on invoice`` (
     
     // GTA HSN code is 9965 or 9967
     let raw = createInvoice None None None None sellerGstin sellerState (Some buyerGstin) (Some buyerState) false igst cgst sgst None "9965" rate None
-    let res = Compiler.compile raw
+    let res = Compiler.compile raw "dummy-hash"
     
     let errors = res.Envelope.Results |> List.filter (fun v -> v.Outcome = Fail)
     if errors.Length > 0 then
         for e in errors do
-            printfn "Violation: %s - %s" e.RuleId (defaultArg e.Evidence "")
+            printfn "Violation: %s - %s" e.Metadata.RuleId (match e.Evidence |> List.tryHead with | Some ev -> defaultArg ev.Value "" | None -> "")
         false
     else true
 
@@ -109,12 +110,12 @@ let ``DIVE 03: SEZ Supply must enforce Interstate (IGST) even within same state`
     let sgst = 0m
     
     let raw = createInvoice None None None None sellerGstin sellerState (Some buyerGstin) (Some buyerState) true igst cgst sgst None "9983" rate None
-    let res = Compiler.compile raw
+    let res = Compiler.compile raw "dummy-hash"
     
     let errors = res.Envelope.Results |> List.filter (fun v -> v.Outcome = Fail)
     if errors.Length > 0 then
         for e in errors do
-            printfn "Violation: %s - %s" e.RuleId (defaultArg e.Evidence "")
+            printfn "Violation: %s - %s" e.Metadata.RuleId (match e.Evidence |> List.tryHead with | Some ev -> defaultArg ev.Value "" | None -> "")
         false
     else true
 
@@ -139,12 +140,12 @@ let ``DIVE 04: Demerit goods must attract Compensation Cess correctly`` (isInter
     let sgst = if isInterstate then 0m else expectedTax / 2m
     
     let raw = createInvoice None None None None sellerGstin sellerState (Some buyerGstin) (Some buyerState) false igst cgst sgst (Some expectedCess) "8703" rate (Some cessRate)
-    let res = Compiler.compile raw
+    let res = Compiler.compile raw "dummy-hash"
     
     let errors = res.Envelope.Results |> List.filter (fun v -> v.Outcome = Fail)
     if errors.Length > 0 then
         for e in errors do
-            printfn "Violation: %s - %s" e.RuleId (defaultArg e.Evidence "")
+            printfn "Violation: %s - %s" e.Metadata.RuleId (match e.Evidence |> List.tryHead with | Some ev -> defaultArg ev.Value "" | None -> "")
         false
     else true
 
@@ -164,12 +165,12 @@ let ``DIVE 05: Credit Note without Original Invoice references must fail`` (isIn
     
     // Create CRN with NO original invoice references
     let raw = createInvoice (Some "CRN") None None None sellerGstin sellerState (Some buyerGstin) (Some buyerState) false igst cgst sgst None "9983" 18m None
-    let res = Compiler.compile raw
+    let res = Compiler.compile raw "dummy-hash"
     
     let errors = res.Envelope.Results |> List.filter (fun v -> v.Outcome = Fail)
     
     // Engine must catch CDN_ORIGINAL_INV
-    errors |> List.exists (fun e -> e.RuleId = "CDN_ORIGINAL_INV")
+    errors |> List.exists (fun e -> e.Metadata.RuleId = "CDN_ORIGINAL_INV")
 
 [<Property>]
 let ``DIVE 06: Credit Note with Original Invoice references must pass`` (isInterstate: bool) =
@@ -186,12 +187,12 @@ let ``DIVE 06: Credit Note with Original Invoice references must pass`` (isInter
     
     // Create CRN WITH original invoice references
     let raw = createInvoice (Some "CRN") (Some "ORIG-INV-123") (Some "2026-06-10") None sellerGstin sellerState (Some buyerGstin) (Some buyerState) false igst cgst sgst None "9983" 18m None
-    let res = Compiler.compile raw
+    let res = Compiler.compile raw "dummy-hash"
     
     let errors = res.Envelope.Results |> List.filter (fun v -> v.Outcome = Fail)
     if errors.Length > 0 then
         for e in errors do
-            printfn "Violation: %s - %s" e.RuleId (defaultArg e.Evidence "")
+            printfn "Violation: %s - %s" e.Metadata.RuleId (match e.Evidence |> List.tryHead with | Some ev -> defaultArg ev.Value "" | None -> "")
         false
     else true
 
@@ -212,12 +213,12 @@ let ``DIVE 07: Invalid IRN length/format must fail`` (isInterstate: bool) =
     // Create invoice with an invalid IRN (only 63 chars instead of 64)
     let badIrn = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b"
     let raw = createInvoice None None None (Some badIrn) sellerGstin sellerState (Some buyerGstin) (Some buyerState) false igst cgst sgst None "9983" 18m None
-    let res = Compiler.compile raw
+    let res = Compiler.compile raw "dummy-hash"
     
     let errors = res.Envelope.Results |> List.filter (fun v -> v.Outcome = Fail)
     
     // Engine must catch IRN_FORMAT
-    errors |> List.exists (fun e -> e.RuleId = "IRN_FORMAT")
+    errors |> List.exists (fun e -> e.Metadata.RuleId = "IRN_FORMAT")
 
 [<Property>]
 let ``DIVE 08: Valid 64-char hex IRN must pass`` (isInterstate: bool) =
@@ -234,12 +235,12 @@ let ``DIVE 08: Valid 64-char hex IRN must pass`` (isInterstate: bool) =
     
     let goodIrn = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
     let raw = createInvoice None None None (Some goodIrn) sellerGstin sellerState (Some buyerGstin) (Some buyerState) false igst cgst sgst None "9983" 18m None
-    let res = Compiler.compile raw
+    let res = Compiler.compile raw "dummy-hash"
     
     let errors = res.Envelope.Results |> List.filter (fun v -> v.Outcome = Fail)
     if errors.Length > 0 then
         for e in errors do
-            printfn "Violation: %s - %s" e.RuleId (defaultArg e.Evidence "")
+            printfn "Violation: %s - %s" e.Metadata.RuleId (match e.Evidence |> List.tryHead with | Some ev -> defaultArg ev.Value "" | None -> "")
         false
     else true
 
@@ -256,11 +257,11 @@ let ``DIVE 09: Domestic GSTIN with valid checksum but invalid PAN structure must
     let sgst = 0m
     
     let raw = createInvoice None None None None sellerGstin sellerState (Some buyerGstin) (Some buyerState) false igst cgst sgst None "9983" 18m None
-    let res = Compiler.compile raw
+    let res = Compiler.compile raw "dummy-hash"
     
     let errors = res.Envelope.Results |> List.filter (fun v -> v.Outcome = Fail)
     // Engine must catch invalid format despite correct checksum
-    errors |> List.exists (fun e -> e.RuleId = "GSTIN_FORMAT" || (defaultArg e.Evidence "").Contains("GSTIN"))
+    errors |> List.exists (fun e -> e.Metadata.RuleId = "GSTIN_FORMAT" || (match e.Evidence |> List.tryHead with | Some ev -> defaultArg ev.Value "" | None -> "").Contains("GSTIN"))
 
 [<Property>]
 let ``DIVE 10: Explicit Place of Supply dictates tax treatment for unregistered B2C (IGST)`` () =
@@ -281,7 +282,7 @@ let ``DIVE 10: Explicit Place of Supply dictates tax treatment for unregistered 
             { Hsn = "9983"; TaxableValue = 1000m; GstRate = 18m; CessRate = None; Tax = { Igst = 180m; Cgst = 0m; Sgst = 0m; Cess = None } }
         ]
     }
-    let res = Compiler.compile raw
+    let res = Compiler.compile raw "dummy-hash"
     // Must pass (interstate logic used because Seller=29, POS=33)
     let errors = res.Envelope.Results |> List.filter (fun v -> v.Outcome = Fail)
     errors.Length = 0
@@ -305,6 +306,6 @@ let ``DIVE 11: Missing POS for unregistered B2C yields UNKNOWN`` () =
             { Hsn = "9983"; TaxableValue = 1000m; GstRate = 18m; CessRate = None; Tax = { Igst = 180m; Cgst = 0m; Sgst = 0m; Cess = None } }
         ]
     }
-    let res = Compiler.compile raw
-    res.Envelope.Results |> List.exists (fun v -> v.RuleId = "PLACE_OF_SUPPLY_UNKNOWN" && v.Outcome = Unknown)
+    let res = Compiler.compile raw "dummy-hash"
+    res.Envelope.Results |> List.exists (fun v -> v.Metadata.RuleId = "PLACE_OF_SUPPLY_UNKNOWN" && v.Outcome = Unknown)
 

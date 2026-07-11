@@ -1,4 +1,5 @@
 module GSTFlow.Wasm.API
+open GSTFlow.Core.Verification
 
 open Fable.Core
 open Fable.Core.JsInterop
@@ -12,7 +13,8 @@ let compileInvoice (jsonString: string) : obj =
     let decodeInvoice = Decode.Auto.fromString<RawInvoice>(jsonString, extra = extra)
     match decodeInvoice with
     | Ok rawInvoice ->
-        let result = Compiler.compile rawInvoice
+        let hash = Hash.computeSha256 jsonString
+        let result = Compiler.compile rawInvoice hash
         match result.IR with
         | Some ir ->
             let summary = Generators.emitSummaryJson ir

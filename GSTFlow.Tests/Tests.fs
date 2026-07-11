@@ -1,4 +1,5 @@
 module GSTFlow.Tests.CoreTests
+open GSTFlow.Core.Verification
 
 open System
 open Xunit
@@ -84,10 +85,10 @@ let ``Law: Interstate supply must absolutely reject local taxes`` (cgst: float) 
     
     // Interstate (Seller 29, Buyer 27)
     let raw = createDummyInvoice "29AAGCB7383J1Z4" "29" (Some "27AAPFU0939F1ZV") (Some "27") 18m cgstVal sgstVal
-    let result = Compiler.compile raw
+    let result = Compiler.compile raw "dummy-hash"
     
     if cgstVal > 0m || sgstVal > 0m then
-        result.Envelope.Results |> List.exists (fun v -> v.RuleId = "IGST_CGST_LAW")
+        result.Envelope.Results |> List.exists (fun v -> v.Metadata.RuleId = "IGST_CGST_LAW")
     else true
 
 [<Property>]
@@ -97,10 +98,10 @@ let ``Law: Intrastate supply must absolutely reject integrated tax`` (igst: floa
     
     // Intrastate (Seller 29, Buyer 29)
     let raw = createDummyInvoice "29AAGCB7383J1Z4" "29" (Some "29AAGCB7383J1Z4") (Some "29") igstVal 9m 9m
-    let result = Compiler.compile raw
+    let result = Compiler.compile raw "dummy-hash"
     
     if igstVal > 0m then
-        result.Envelope.Results |> List.exists (fun v -> v.RuleId = "IGST_CGST_LAW")
+        result.Envelope.Results |> List.exists (fun v -> v.Metadata.RuleId = "IGST_CGST_LAW")
     else true
 
 [<Property>]
@@ -110,9 +111,9 @@ let ``Law: B2C supply implicitly binds Place Of Supply to Seller State (Intrasta
     
     // B2C (No Buyer)
     let raw = createDummyInvoice "29AAGCB7383J1Z4" "29" None None igstVal 9m 9m
-    let result = Compiler.compile raw
+    let result = Compiler.compile raw "dummy-hash"
     
     // If it's intrastate, it must reject IGST. We prove it's treated as Intrastate.
     if igstVal > 0m then
-        result.Envelope.Results |> List.exists (fun v -> v.RuleId = "IGST_CGST_LAW")
+        result.Envelope.Results |> List.exists (fun v -> v.Metadata.RuleId = "IGST_CGST_LAW")
     else true

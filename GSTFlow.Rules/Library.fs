@@ -31,30 +31,7 @@ type RawInvoice = {
     Items: RawInvoiceItem list
 }
 
-type RuleOutcome = 
-    | Pass
-    | Warning
-    | Unknown
-    | NotSupported
-    | Fail
-
-type RuleResult = {
-    RuleId: string
-    Outcome: RuleOutcome
-    MessageKey: string
-    Evidence: string option
-    Source: string
-    RegulationReference: string option
-}
-
-type VerdictEnvelope = {
-    SchemaVersion: string
-    EngineVersion: string
-    RuleSetVersion: string
-    InvoiceHash: string
-    Results: RuleResult list
-    OverallOutcome: RuleOutcome
-}
+open GSTFlow.Core.Verification
 
 type CompilationResult = {
     IR: GSTCanonicalIR option
@@ -63,9 +40,15 @@ type CompilationResult = {
 
 module Compiler =
     
-    let private failRule id msg = { RuleId = id; Outcome = Fail; MessageKey = id; Evidence = Some msg; Source = "Compiler"; RegulationReference = None }
-    let private warnRule id msg = { RuleId = id; Outcome = Warning; MessageKey = id; Evidence = Some msg; Source = "Compiler"; RegulationReference = None }
-    let private unknownRule id msg = { RuleId = id; Outcome = Unknown; MessageKey = id; Evidence = Some msg; Source = "Compiler"; RegulationReference = None }
+    let private createRule outcome id _ =
+        { Metadata = { RuleId = id; Category = "GST"; EffectiveFrom = None; EffectiveUntil = None; Reference = None; Confidence = Exact; MessageKey = id }
+          Outcome = outcome
+          Evidence = [ { Path = ""; Kind = Derived; Value = None; Provenance = Some "Compiler" } ]
+          Parameters = Map.empty }
+          
+    let private failRule = createRule Fail
+    let private warnRule = createRule Warning
+    let private unknownRule = createRule Unknown
 
     let validStateCodes = 
         Set.ofList ([ for i in 1..38 -> sprintf "%02d" i ] @ [ "97"; "99" ])
@@ -135,7 +118,7 @@ module Compiler =
 
         violations
 
-    let compile (raw: RawInvoice) : CompilationResult =
+    let compile (raw: RawInvoice) (hash: string) : CompilationResult =
         let mutable violations = []
         
         let sellerRes = validateParty "Seller" raw.Seller
@@ -185,10 +168,13 @@ module Compiler =
 
         if violations.Length > 0 && violations |> List.exists (fun v -> v.Outcome = Fail) then
             let env = {
-                SchemaVersion = "1.0.0"
+                SchemaVersion = "1.0"
+                EngineId = "gstflow"
                 EngineVersion = "1.0.0"
+                RuleSetId = "gstflow-rules"
                 RuleSetVersion = "2026.07.10"
-                InvoiceHash = "NOT_HASHED_YET"
+                SubjectType = "gst-invoice"
+                SubjectHash = hash
                 Results = violations
                 OverallOutcome = Fail
             }
@@ -240,20 +226,16 @@ module Compiler =
             if totalInvoiceValue % 1m <> 0m then
                  violations <- warnRule "SEC_170_ROUNDING" "Section 170 CGST Act: Final invoice total must be rounded off to the nearest Rupee. Note: Telecom operators often ignore this." :: violations
                  
-            let determineOutcome (v: RuleResult list) =
-                if v.Length = 0 then Pass
-                elif v |> List.exists (fun x -> x.Outcome = Fail) then Fail
-                elif v |> List.exists (fun x -> x.Outcome = Unknown) then Unknown
-                elif v |> List.exists (fun x -> x.Outcome = NotSupported) then NotSupported
-                else Warning
-
             let envelope = {
-                SchemaVersion = "1.0.0"
+                SchemaVersion = "1.0"
+                EngineId = "gstflow"
                 EngineVersion = "1.0.0"
+                RuleSetId = "gstflow-rules"
                 RuleSetVersion = "2026.07.10"
-                InvoiceHash = "NOT_HASHED_YET"
+                SubjectType = "gst-invoice"
+                SubjectHash = hash
                 Results = violations
-                OverallOutcome = determineOutcome violations
+                OverallOutcome = VerdictEnvelope.determineOverallOutcome violations
             }
 
             if violations |> List.exists (fun v -> v.Outcome = Fail) then
