@@ -95,6 +95,7 @@ type Invoice = {
     OriginalInvoiceNumber: string option
     OriginalInvoiceDate: string option
     Irn: string option
+    ReverseCharge: bool
     Seller: Party
     Buyer: Party option
     Items: InvoiceItem list

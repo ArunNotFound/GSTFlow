@@ -26,6 +26,7 @@ type RawInvoice = {
     OriginalInvoiceNumber: string option
     OriginalInvoiceDate: string option
     Irn: string option
+    ReverseCharge: string option
     Seller: RawParty
     Buyer: RawParty option
     Items: RawInvoiceItem list
@@ -74,7 +75,7 @@ module Compiler =
         let prefixes = ["9965"; "9967"; "9973"; "9982"; "9983"; "9985"]
         prefixes |> List.exists (fun p -> hsn.StartsWith(p))
 
-    let private validateItem (isInterstate: bool) (item: RawInvoiceItem) =
+    let private validateItem (isInterstate: bool) (isDocumentRcm: bool) (item: RawInvoiceItem) =
         let mutable violations = []
 
         if not (isValidHsn item.Hsn) then
@@ -83,37 +84,41 @@ module Compiler =
         if not (validRateSlabs.Contains item.GstRate) then
             violations <- failRule "RATE_SLAB" (sprintf "GST Rate %M is not a valid Indian slab (0, 0.1, 0.25, 1.5, 3, 5, 12, 18, 28)" item.GstRate) :: violations
 
-        // Section 170: Rounding to the nearest Rupee applies at the total level, but item-level tax should be mathematically accurate to 2 decimals.
         let expectedTax = Math.Round(item.TaxableValue * (item.GstRate / 100m), 2)
         
-        let isRcmExempt = isRcmHsn item.Hsn && item.Tax.Igst = 0m && item.Tax.Cgst = 0m && item.Tax.Sgst = 0m
-
-        if isInterstate then
-            if item.Tax.Cgst > 0m || item.Tax.Sgst > 0m then
-                violations <- failRule "IGST_CGST_LAW" "Interstate supply cannot have CGST or SGST" :: violations
-            
-            if not isRcmExempt && Math.Abs(item.Tax.Igst - expectedTax) > 0.5m then
-                violations <- failRule "TAX_AMOUNT" (sprintf "Expected IGST approx %M but got %M (failed Sec 170 / item math)" expectedTax item.Tax.Igst) :: violations
+        if isDocumentRcm then
+            if item.Tax.Igst > 0m || item.Tax.Cgst > 0m || item.Tax.Sgst > 0m || (match item.Tax.Cess with Some c -> c > 0m | None -> false) then
+                violations <- failRule "RCM_TAX_CHARGED" "Invoice is marked for Reverse Charge (RCM). Seller cannot collect tax; tax amounts must be 0." :: violations
         else
-            if item.Tax.Igst > 0m then
-                violations <- failRule "IGST_CGST_LAW" "Intrastate supply cannot have IGST" :: violations
+            if isRcmHsn item.Hsn then
+                violations <- failRule "RCM_LAW" (sprintf "HSN '%s' falls under mandatory Reverse Charge. The invoice must mark ReverseCharge=Y and tax amounts must be 0." item.Hsn) :: violations
             
-            let expectedSplit = Math.Round(expectedTax / 2m, 2)
-            if not isRcmExempt && (Math.Abs(item.Tax.Cgst - expectedSplit) > 0.5m || Math.Abs(item.Tax.Sgst - expectedSplit) > 0.5m) then
-                violations <- failRule "TAX_AMOUNT" (sprintf "Expected CGST/SGST approx %M but got C:%M S:%M" expectedSplit item.Tax.Cgst item.Tax.Sgst) :: violations
+            if isInterstate then
+                if item.Tax.Cgst > 0m || item.Tax.Sgst > 0m then
+                    violations <- failRule "IGST_CGST_LAW" "Interstate supply cannot have CGST or SGST" :: violations
                 
-        if isRcmExempt then
-            violations <- unknownRule "REVIEW_REQUIRED" (sprintf "Taxes are zero for HSN '%s' - Possible Reverse Charge Mechanism (RCM), review required." item.Hsn) :: violations
-            
+                if Math.Abs(item.Tax.Igst - expectedTax) > 0.5m then
+                    violations <- failRule "TAX_AMOUNT" (sprintf "Expected IGST approx %M but got %M (failed Sec 170 / item math)" expectedTax item.Tax.Igst) :: violations
+            else
+                if item.Tax.Igst > 0m then
+                    violations <- failRule "IGST_CGST_LAW" "Intrastate supply cannot have IGST" :: violations
+                
+                let expectedSplit = Math.Round(expectedTax / 2m, 2)
+                if Math.Abs(item.Tax.Cgst - expectedSplit) > 0.5m || Math.Abs(item.Tax.Sgst - expectedSplit) > 0.5m then
+                    violations <- failRule "TAX_AMOUNT" (sprintf "Expected CGST/SGST approx %M but got C:%M S:%M" expectedSplit item.Tax.Cgst item.Tax.Sgst) :: violations
+                
         match item.CessRate, item.Tax.Cess with
         | Some crate, Some cval ->
-            let expectedCess = Math.Round(item.TaxableValue * (crate / 100m), 2)
-            if Math.Abs(cval - expectedCess) > 0.5m then
-                violations <- failRule "CESS_ARITHMETIC" (sprintf "Expected Cess approx %M but got %M" expectedCess cval) :: violations
+            if not isDocumentRcm then
+                let expectedCess = Math.Round(item.TaxableValue * (crate / 100m), 2)
+                if Math.Abs(cval - expectedCess) > 0.5m then
+                    violations <- failRule "CESS_ARITHMETIC" (sprintf "Expected Cess approx %M but got %M" expectedCess cval) :: violations
         | None, Some cval when cval > 0m ->
-            violations <- failRule "CESS_ARITHMETIC" "Cess amount provided but no CessRate specified" :: violations
+            if not isDocumentRcm then
+                violations <- failRule "CESS_ARITHMETIC" "Cess amount provided but no CessRate specified" :: violations
         | Some _, None ->
-            violations <- failRule "CESS_ARITHMETIC" "CessRate provided but no Cess amount specified" :: violations
+            if not isDocumentRcm then
+                violations <- failRule "CESS_ARITHMETIC" "CessRate provided but no Cess amount specified" :: violations
         | _ -> ()
 
         violations
@@ -216,12 +221,20 @@ module Compiler =
                 seller.IsSez || 
                 (match buyer with Some b -> b.IsSez | None -> false)
             
+            let isDocumentRcm =
+                match raw.ReverseCharge with
+                | Some rc -> rc.ToUpperInvariant() = "Y" || rc.ToUpperInvariant() = "TRUE"
+                | None ->
+                    match buyer with
+                    | Some _ when GSTIN.value seller.Gstin = "URP" -> true // Self Invoice under RCM
+                    | _ -> false
+
             let supplyType = 
                 match buyer with
                 | Some b when GSTIN.value b.Gstin <> "URP" -> B2B
                 | _ -> B2C
                 
-            let itemViolations = raw.Items |> List.collect (validateItem isInterstate)
+            let itemViolations = raw.Items |> List.collect (validateItem isInterstate isDocumentRcm)
             violations <- itemViolations @ violations
             
             // Section 170 Rounding Law: Total tax must be rounded to nearest Rupee
@@ -250,13 +263,12 @@ module Compiler =
                 SubjectType = "gst-invoice"
                 SubjectHash = hash
                 Results = violations
-                OverallOutcome = VerdictEnvelope.determineOverallOutcome violations
+                OverallOutcome = if violations.IsEmpty then Pass else violations |> List.map (fun v -> v.Outcome) |> List.max
             }
 
             if violations |> List.exists (fun v -> v.Outcome = Fail) then
                 { IR = None; Envelope = envelope }
             else
-                let validItems = raw.Items |> List.map (fun i -> { InvoiceItem.Hsn = i.Hsn; InvoiceItem.TaxableValue = i.TaxableValue; InvoiceItem.GstRate = i.GstRate; InvoiceItem.CessRate = i.CessRate; InvoiceItem.Tax = i.Tax })
                 let ir = {
                     Invoice = {
                         DocumentType = docType
@@ -265,9 +277,16 @@ module Compiler =
                         OriginalInvoiceNumber = raw.OriginalInvoiceNumber
                         OriginalInvoiceDate = raw.OriginalInvoiceDate
                         Irn = raw.Irn
+                        ReverseCharge = isDocumentRcm
                         Seller = seller
                         Buyer = buyer
-                        Items = validItems
+                        Items = raw.Items |> List.map (fun i -> {
+                            Hsn = i.Hsn
+                            TaxableValue = i.TaxableValue
+                            GstRate = i.GstRate
+                            CessRate = i.CessRate
+                            Tax = i.Tax
+                        })
                     }
                     DerivedSupplyType = supplyType
                     PlaceOfSupply = pos

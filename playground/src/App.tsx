@@ -48,6 +48,18 @@ const translations: Record<string, { en: string, hi: string, hint_en: string, hi
     hi: "सप्लाई का स्थान निर्धारित नहीं किया जा सका।",
     hint_en: "Ensure buyer GSTIN or explicit PlaceOfSupply is provided.",
     hint_hi: "सुनिश्चित करें कि खरीदार का GSTIN या स्पष्ट PlaceOfSupply दिया गया है।"
+  },
+  RCM_TAX_CHARGED: {
+    en: "Tax collected on a Reverse Charge (RCM) invoice.",
+    hi: "रिवर्स चार्ज (RCM) चालान पर टैक्स वसूला गया है।",
+    hint_en: "Seller cannot collect tax under RCM. Change tax amounts to 0.",
+    hint_hi: "विक्रेता RCM के तहत टैक्स नहीं वसूल सकता। टैक्स राशि को 0 करें।"
+  },
+  RCM_LAW: {
+    en: "Mandatory Reverse Charge applies, but RCM is not flagged.",
+    hi: "अनिवार्य रिवर्स चार्ज लागू होता है, लेकिन RCM फ्लैग नहीं किया गया है।",
+    hint_en: "This HSN falls under mandatory RCM. Mark ReverseCharge=Y and set tax amounts to 0.",
+    hint_hi: "यह HSN अनिवार्य RCM के अंतर्गत आता है। ReverseCharge=Y मार्क करें और टैक्स राशि को 0 करें।"
   }
 };
 
