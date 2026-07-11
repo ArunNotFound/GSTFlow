@@ -11,6 +11,7 @@ open GSTFlow.Emit
 
 type CliArguments =
     | Validate of path:string
+    | Validate_Batch of dir:string
     | Emit_Summary of path:string
     | Emit_Envelope of path:string
     | Prove of path:string
@@ -18,21 +19,26 @@ type CliArguments =
         member s.Usage =
             match s with
             | Validate _ -> "Validate an invoice JSON file against GST rules."
+            | Validate_Batch _ -> "Batch validate a directory of invoice JSON files, detecting duplicates and emitting exceptions.csv."
             | Emit_Summary _ -> "Emit the Summary JSON payload for the given invoice JSON file."
             | Emit_Envelope _ -> "Emit the Canonical VerdictEnvelope JSON for the given invoice JSON file."
             | Prove _ -> "Emit the VALIDATION_REPORT.md for the given invoice JSON file."
 
+let tryReadInvoice path =
+    try
+        let jsonString = File.ReadAllText path
+        let extra = Extra.empty |> Extra.withDecimal
+        match Decode.Auto.fromString<RawInvoice>(jsonString, extra = extra) with
+        | Ok invoice -> Ok (invoice, Hash.computeSha256 jsonString)
+        | Error msg -> Error msg
+    with e ->
+        Error e.Message
+
 let readInvoice path =
-    if not (File.Exists path) then
-        printfn "Error: File not found at %s" path
-        Environment.Exit(1)
-        
-    let jsonString = File.ReadAllText path
-    let extra = Extra.empty |> Extra.withDecimal
-    match Decode.Auto.fromString<RawInvoice>(jsonString, extra = extra) with
-    | Ok invoice -> (invoice, Hash.computeSha256 jsonString)
+    match tryReadInvoice path with
+    | Ok res -> res
     | Error msg ->
-        printfn "Error parsing JSON: %s" msg
+        printfn "Error reading or parsing file %s: %s" path msg
         Environment.Exit(1)
         failwith "unreachable"
 
@@ -58,8 +64,52 @@ let main argv =
             | None ->
                 printfn "❌ Validation Failed:"
                 for v in res.Envelope.Results do
-                    printfn "  [%s] %s" v.Metadata.RuleId (match v.Evidence |> List.tryHead with | Some e -> defaultArg e.Value "" | None -> "")
+                    printfn "  [%s] %s" v.Metadata.RuleId v.Metadata.MessageKey
                 1
+
+        elif results.Contains(Validate_Batch) then
+            let dir = results.GetResult(Validate_Batch)
+            if not (Directory.Exists dir) then
+                printfn "Error: Directory not found at %s" dir
+                1
+            else
+                let files = Directory.GetFiles(dir, "*.json")
+                let seenInvoices = System.Collections.Generic.HashSet<string>()
+                let mutable exceptions = []
+                
+                for file in files do
+                    match tryReadInvoice file with
+                    | Ok (rawInvoice, hash) ->
+                        let gstin = if isNull rawInvoice.Seller.Gstin then "" else rawInvoice.Seller.Gstin
+                        let key = sprintf "%s|%s" gstin rawInvoice.InvoiceNumber
+                        
+                        if seenInvoices.Contains(key) then
+                            let csvLine = sprintf "\"%s\",\"%s\",\"%s\",\"DUPLICATE_INVOICE\",\"Duplicate invoice detected\"" (Path.GetFileName file) rawInvoice.InvoiceNumber gstin
+                            exceptions <- csvLine :: exceptions
+                        else
+                            seenInvoices.Add(key) |> ignore
+                            let res = Compiler.compile rawInvoice hash
+                            match res.IR with
+                            | Some _ -> ()
+                            | None ->
+                                for v in res.Envelope.Results do
+                                    if v.Outcome = Fail || v.Outcome = Unknown then
+                                        let csvLine = sprintf "\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"" (Path.GetFileName file) rawInvoice.InvoiceNumber gstin v.Metadata.RuleId v.Metadata.MessageKey
+                                        exceptions <- csvLine :: exceptions
+                    | Error msg ->
+                        let escapedMsg = msg.Replace("\"", "\"\"")
+                        let csvLine = sprintf "\"%s\",\"\",\"\",\"PARSE_ERROR\",\"%s\"" (Path.GetFileName file) escapedMsg
+                        exceptions <- csvLine :: exceptions
+                
+                if exceptions.IsEmpty then
+                    printfn "✅ Batch validation successful! All %d files passed." files.Length
+                    0
+                else
+                    let csvPath = Path.Combine(dir, "exceptions.csv")
+                    let header = "File,InvoiceNumber,SellerGSTIN,RuleId,MessageKey"
+                    File.WriteAllLines(csvPath, header :: (List.rev exceptions))
+                    printfn "❌ Batch validation failed with %d exceptions. See %s" exceptions.Length csvPath
+                    1
 
         elif results.Contains(Emit_Summary) then
             let path = results.GetResult(Emit_Summary)
@@ -74,7 +124,7 @@ let main argv =
             | None ->
                 printfn "Error: Cannot emit Summary for invalid invoice."
                 for v in res.Envelope.Results do
-                    printfn "  [%s] %s" v.Metadata.RuleId (match v.Evidence |> List.tryHead with | Some e -> defaultArg e.Value "" | None -> "")
+                    printfn "  [%s] %s" v.Metadata.RuleId v.Metadata.MessageKey
                 1
 
         elif results.Contains(Emit_Envelope) then
@@ -98,7 +148,7 @@ let main argv =
             | None ->
                 printfn "Error: Cannot emit VALIDATION REPORT for invalid invoice."
                 for v in res.Envelope.Results do
-                    printfn "  [%s] %s" v.Metadata.RuleId (match v.Evidence |> List.tryHead with | Some e -> defaultArg e.Value "" | None -> "")
+                    printfn "  [%s] %s" v.Metadata.RuleId v.Metadata.MessageKey
                 1
         else
             printfn "%s" (parser.PrintUsage())
@@ -107,3 +157,4 @@ let main argv =
     with e ->
         printfn "%s" e.Message
         1
+

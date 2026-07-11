@@ -42,6 +42,12 @@ type RuleResult =
       Evidence: Evidence list
       Parameters: Map<string,string> }
 
+/// <summary>
+/// The core Canonical Verification contract.
+/// SCHEMA VERSION 1.0 IS FROZEN. 
+/// Field set, outcome precedence, and canonical JSON rules are stable contracts. 
+/// Breaking changes require a schema-version bump + written rationale.
+/// </summary>
 type VerdictEnvelope =
     { SchemaVersion: string
       EngineId: string
