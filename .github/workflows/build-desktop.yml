@@ -1,0 +1,45 @@
+name: Build GSTFlow Desktop (Pake)
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Pake CLI
+        run: npm install -g pake-cli
+
+      - name: Build GSTFlow Desktop
+        run: |
+          pake https://canonflowfoundation.github.io/GSTFlow/ --name "GSTFlow" --transparent --show-system-tray
+        
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: GSTFlow-Desktop-${{ matrix.os }}
+          path: |
+            *.exe
+            *.app
+            *.dmg
+            *.deb
+            *.AppImage
