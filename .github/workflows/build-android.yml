@@ -28,6 +28,11 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      - name: Compile F# to TypeScript (Fable)
+        run: |
+          dotnet tool restore
+          dotnet fable GSTFlow.Wasm -o playground/src/fable --lang ts
+
       - name: Install Dependencies
         working-directory: playground
         run: npm ci
