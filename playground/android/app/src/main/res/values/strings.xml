@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-    <string name="app_name">GSTFlow</string>
-    <string name="title_activity_main">GSTFlow</string>
-    <string name="package_name">com.canonflow.gstflow</string>
-    <string name="custom_url_scheme">com.canonflow.gstflow</string>
-</resources>

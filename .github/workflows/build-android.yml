@@ -35,21 +35,35 @@ jobs:
           dotnet tool restore
           dotnet fable GSTFlow.Wasm -o playground/src/fable --lang ts
 
-      - name: Install Dependencies
-        working-directory: playground
-        run: npm ci
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.0'
+          channel: 'stable'
 
-      - name: Build Web App
-        working-directory: playground
-        run: npm run build
+      - name: Create Flutter App
+        run: |
+          mkdir -p flutter_app
+          cd flutter_app
+          flutter create . --project-name gstflow
 
-      - name: Sync Capacitor
-        working-directory: playground
-        run: npx cap sync android
+      - name: Compile F# to Dart
+        run: |
+          dotnet tool restore
+          dotnet fable GSTFlow.Core -o flutter_app/lib/fable/Core --lang dart
+          dotnet fable GSTFlow.Rules -o flutter_app/lib/fable/Rules --lang dart
 
-      - name: Build APK
-        working-directory: playground/android
-        run: ./gradlew assembleDebug
+      - name: Build Flutter APK
+        working-directory: flutter_app
+        run: |
+          flutter pub get
+          flutter build apk --release
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GSTFlow-Android-APK
+          path: flutter_app/build/app/outputs/flutter-apk/app-release.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
