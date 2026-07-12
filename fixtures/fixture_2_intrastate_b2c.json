@@ -6,9 +6,10 @@
     "StateCode": "27"
   },
   "Buyer": null,
+  "PlaceOfSupply": "27",
   "Items": [
     {
-      "Hsn": "998311",
+      "Hsn": "998811",
       "TaxableValue": 5000.0,
       "GstRate": 18.0,
       "Tax": {
