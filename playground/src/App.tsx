@@ -408,9 +408,10 @@ export default function App() {
         </div>
       </section>
 
-      {/* Formbricks-style Feedback FAB */}
+      {/* Formbricks-style Feedback FAB pointing to GitHub Issues */}
       <a 
-        href="mailto:arun5@duck.com?subject=GSTFlow%20Feedback"
+        href="https://github.com/CanonFlowFoundation/GSTFlow/issues/new?title=Feedback:%20&body=Please%20describe%20your%20feedback%20or%20feature%20request%20here...%0A%0A---%0A**Email/Contact%20(optional):**%20%0A**Environment:**%20GSTFlow%20Web%20Validator"
+        target="_blank" rel="noreferrer"
         className="fixed bottom-6 right-6 px-5 py-3 bg-white text-gray-900 font-bold rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.4)] hover:-translate-y-1 hover:shadow-[0_8px_40px_rgb(0,0,0,0.6)] transition-all flex items-center z-50 border border-gray-200"
       >
         <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
