@@ -25,12 +25,6 @@ jobs:
           flutter-version: '3.22.0'
           channel: 'stable'
 
-      - name: Create Flutter App
-        run: |
-          mkdir -p flutter_app
-          cd flutter_app
-          flutter create . --project-name gstflow
-
       - name: Compile F# to Dart
         run: |
           dotnet tool restore
