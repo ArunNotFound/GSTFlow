@@ -6,8 +6,11 @@ test('has title and can process valid invoice', async ({ page }) => {
   // Expect a title
   await expect(page).toHaveTitle(/GSTFlow/i);
 
+  // Click the Raw JSON button to switch modes
+  await page.getByRole('button', { name: 'Raw JSON' }).click();
+
   // Get the textarea
-  const textarea = page.locator('textarea');
+  const textarea = page.locator('.monaco-editor textarea').first();
   
   // A valid invoice
   const validInvoice = {
@@ -39,6 +42,6 @@ test('has title and can process valid invoice', async ({ page }) => {
   await textarea.fill('');
   await textarea.fill(JSON.stringify(validInvoice, null, 2));
 
-  // The output should be successful (Pass)
-  await expect(page.getByText('Pass')).toBeVisible({ timeout: 5000 });
+  // The output should be successful
+  await expect(page.getByText('Ready to File')).toBeVisible({ timeout: 5000 });
 });
