@@ -1,0 +1,46 @@
+name: Build GSTFlow Android APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Install Dependencies
+        working-directory: playground
+        run: npm ci
+
+      - name: Build Web App
+        working-directory: playground
+        run: npm run build
+
+      - name: Sync Capacitor
+        working-directory: playground
+        run: npx cap sync android
+
+      - name: Build APK
+        working-directory: playground/android
+        run: ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: GSTFlow-Android-Debug
+          path: playground/android/app/build/outputs/apk/debug/app-debug.apk
