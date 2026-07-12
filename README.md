@@ -59,7 +59,8 @@ All core perimeter systems and test defenses have been fully activated. The engi
 - **Mock PDF Pipeline:** The `sampleinvoices/mock_invoice_pdfs` directory has been successfully parsed, semantically renamed (via `pdf.js` heuristics), and grouped (e.g. `B2C/INV-GSTI.pdf`).
 - **Heavy Machinery Pipeline:** The CLI `--validate-batch` successfully shreds massive batches of invoices, categorizing exceptions cleanly into `exceptions.csv` while utilizing Native AOT compilation.
 
-*GSTFlow is structurally complete and ready to serve as the architecture blueprint for global EDI standards (EDIFlow).*
-## 📝 Tech Debt & TODOs
+*Phase I complete. Verification core extraction complete.*
 
-* **Serialization Drift:** Replace manual JSON generation and `#if FABLE_COMPILER` branching in `CanonicalJson.fs` with **Thoth.Json**. This is required to guarantee the "One-Engine Law" between .NET Native AOT and Fable WASM without manual synchronization.
+## 🌐 Foundation
+
+Learn more about the underlying philosophy and mathematical model at the [CanonFlow Foundation](https://canonflowfoundation.github.io).
