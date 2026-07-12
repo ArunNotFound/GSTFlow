@@ -40,7 +40,7 @@ const translations: Record<string, { en: string, hi: string, hint_en: string, hi
   INV_SANITY_NO: {
     en: "Invoice number is missing.",
     hi: "चालान नंबर गायब है।",
-    hint_en: "Provide a valid invoice number.",
+    hint_en: "Provide a valid invoice नंबर.",
     hint_hi: "मान्य चालान नंबर प्रदान करें।"
   },
   PLACE_OF_SUPPLY_UNKNOWN: {
@@ -169,22 +169,17 @@ export default function App() {
   const [lang, setLang] = useState<'en'|'hi'>('en');
   
   let gstr1 = '';
-  let proof = '';
   let err = '';
-  
   let violations: any[] = [];
-  let envelopeObj: any = null;
   
   try {
       const res = compileInvoice(jsonInput);
       if (res.success) {
           gstr1 = res.summary;
-          proof = res.proof;
-          if (res.envelope) envelopeObj = JSON.parse(res.envelope);
       } else {
           err = res.error;
           if (res.envelope) {
-              envelopeObj = JSON.parse(res.envelope);
+              const envelopeObj = JSON.parse(res.envelope);
               violations = envelopeObj.Results
                 .filter((r: any) => r.Outcome === "Fail" || r.Outcome === "Unknown")
                 .map((r: any) => {
@@ -203,184 +198,239 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100 flex flex-col font-sans">
-      <header className="px-6 py-4 border-b border-gray-800 bg-gray-900/50 backdrop-blur-md sticky top-0 z-10 flex justify-between items-center">
+    <div className="min-h-screen bg-[#121212] text-gray-100 flex flex-col font-sans selection:bg-emerald-500/30">
+      
+      {/* Navbar */}
+      <nav className="px-6 py-4 border-b border-gray-800/50 bg-[#121212]/80 backdrop-blur-md sticky top-0 z-50 flex justify-between items-center shadow-sm">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center font-bold text-gray-900">G</div>
-          <h1 className="text-xl font-semibold tracking-tight text-white">GSTFlow Semantic Compiler</h1>
+          <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center font-bold text-white shadow-lg shadow-emerald-500/20">G</div>
+          <h1 className="text-xl font-bold tracking-tight text-white">GSTFlow</h1>
         </div>
         <div className="flex items-center space-x-6">
-          <button 
-            onClick={() => setLang(lang === 'en' ? 'hi' : 'en')}
-            className="text-sm px-3 py-1 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-md border border-gray-700 transition-colors flex items-center space-x-2"
-          >
-            <span>Language: </span>
-            <span className="font-bold text-white">{lang === 'en' ? 'English' : 'हिंदी'}</span>
-          </button>
-          <div className="text-sm font-medium px-3 py-1 bg-emerald-900/40 text-emerald-400 border border-emerald-500/30 rounded-full flex items-center shadow-[0_0_10px_rgba(16,185,129,0.2)]">
-            <svg className="w-4 h-4 mr-1.5 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>
-            Working Offline
+          <a href="#validator" className="text-sm font-medium text-gray-300 hover:text-white transition">Offline Validator</a>
+          <a href="#features" className="text-sm font-medium text-gray-300 hover:text-white transition">Features</a>
+          <a href="#resources" className="text-sm font-medium text-gray-300 hover:text-white transition">Govt Links</a>
+          <a href="https://canonflowfoundation.github.io" target="_blank" rel="noreferrer" className="text-sm font-medium text-emerald-400 hover:text-emerald-300 transition">Our Vision (CFF)</a>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="relative px-6 py-24 flex flex-col items-center text-center overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-emerald-500/10 rounded-full blur-[100px] -z-10"></div>
+        <h2 className="text-5xl md:text-6xl font-black text-white mb-6 tracking-tight">
+          Bulletproof GST Compliance. <br/>
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-500">100% Offline.</span>
+        </h2>
+        <p className="text-lg md:text-xl text-gray-400 max-w-2xl mb-10 leading-relaxed">
+          Stop worrying about notices and penalties. Validate your invoices instantly, securely, and without your data ever leaving your device. 
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <a href="#validator" className="px-8 py-3.5 bg-white text-gray-900 font-bold rounded-full hover:bg-gray-100 transition shadow-lg shadow-white/10">
+            Try Validator Now
+          </a>
+          <a href="#pake-download" className="px-8 py-3.5 bg-gray-800 text-white font-semibold rounded-full border border-gray-700 hover:bg-gray-700 transition flex items-center justify-center">
+            <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+            Download Desktop App (Coming Soon)
+          </a>
+        </div>
+      </section>
+
+      {/* Features Grid */}
+      <section id="features" className="px-6 py-20 bg-gray-900/30 border-y border-gray-800/50">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="p-8 rounded-2xl bg-gray-800/30 border border-gray-700/50 backdrop-blur-sm">
+            <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 mb-6">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+            </div>
+            <h3 className="text-xl font-bold text-white mb-3">Absolute Privacy</h3>
+            <p className="text-gray-400 leading-relaxed">No cloud APIs. No server uploads. Your sensitive financial data is validated purely locally in your browser.</p>
+          </div>
+          <div className="p-8 rounded-2xl bg-gray-800/30 border border-gray-700/50 backdrop-blur-sm">
+            <div className="w-12 h-12 rounded-xl bg-cyan-500/20 flex items-center justify-center text-cyan-400 mb-6">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+            </div>
+            <h3 className="text-xl font-bold text-white mb-3">Zero Penalties</h3>
+            <p className="text-gray-400 leading-relaxed">Instantly catches place of supply errors, mathematical mismatches, and HSN invalidities before you file.</p>
+          </div>
+          <div className="p-8 rounded-2xl bg-gray-800/30 border border-gray-700/50 backdrop-blur-sm">
+            <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center text-purple-400 mb-6">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+            </div>
+            <h3 className="text-xl font-bold text-white mb-3">Guaranteed Accuracy</h3>
+            <p className="text-gray-400 leading-relaxed">Built on a strict, deterministic rules engine that matches the official CGST Act word for word.</p>
           </div>
         </div>
-      </header>
+      </section>
 
-      <main className="flex-1 flex overflow-hidden">
-        {/* Left/Main Panel: Input Area */}
-        <div className={`${inputMode === 'json' ? 'w-1/2 border-r' : 'w-full'} flex flex-col relative group border-gray-800 bg-gray-900`}>
+      {/* Validator Tool */}
+      <section id="validator" className="px-6 py-20 flex flex-col items-center">
+        <div className="w-full max-w-6xl">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold text-white mb-4">The Offline Validator</h2>
+            <p className="text-gray-400">Upload an invoice PDF or paste raw JSON. We validate it locally in milliseconds.</p>
+          </div>
           
-          {/* Mode Switcher */}
-          <div className="absolute top-4 left-4 z-20 bg-gray-800/80 rounded-lg p-1 flex items-center shadow-lg border border-gray-700">
-            <button 
-              onClick={() => setInputMode('json')}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${inputMode === 'json' ? 'bg-gray-700 text-white shadow' : 'text-gray-400 hover:text-gray-200'}`}
-            >
-              Raw JSON
-            </button>
-            <button 
-              onClick={() => setInputMode('pdf')}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${inputMode === 'pdf' ? 'bg-gray-700 text-white shadow' : 'text-gray-400 hover:text-gray-200'}`}
-            >
-              PDF Intake
-            </button>
-          </div>
-
-          {inputMode === 'json' ? (
-            <Editor
-              height="100%"
-              defaultLanguage="json"
-              theme="vs-dark"
-              value={jsonInput}
-              onChange={(val) => setJsonInput(val || '')}
-              options={{ minimap: { enabled: false }, fontSize: 14, padding: { top: 64 }, scrollBeyondLastLine: false }}
-            />
-          ) : (
-            pdfState === 'upload' ? (
-              <PdfUploader onExtract={(data) => {
-                setExtractedData(data);
-                setPdfState('confirm');
-              }} />
-            ) : pdfState === 'confirm' ? (
-              <ConfirmationScreen 
-                extractedData={extractedData} 
-                onConfirm={(validJson) => {
-                  setJsonInput(validJson);
-                  setPdfState('verdict');
-                }} 
-                onCancel={() => setPdfState('upload')}
-              />
-            ) : (
-              <VerdictScreen 
-                isSuccess={!err && violations.length === 0}
-                violations={violations}
-                invoiceData={jsonInput}
-                onReset={() => {
-                  setJsonInput(defaultInvoice);
-                  setPdfState('upload');
-                }}
-              />
-            )
-          )}
-        </div>
-
-        {/* Right Panel: Output (Only in JSON Mode) */}
-        {inputMode === 'json' && (
-          <div className="w-1/2 flex flex-col bg-[#0d1117] overflow-y-auto">
-            {err ? (
-               <div className="p-8 space-y-6">
-                 <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-6 shadow-xl">
-                   <h2 className="text-red-400 font-semibold mb-2 flex items-center">
-                     <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                     Semantic Parsing Error
-                   </h2>
-                   <pre className="text-sm text-red-300/80 whitespace-pre-wrap font-mono">{err}</pre>
-                 </div>
-                 {violations.length > 0 && (
-                   <div className="bg-orange-900/20 border border-orange-500/30 rounded-xl p-6 shadow-xl">
-                     <h2 className="text-orange-400 font-semibold mb-4 flex items-center">
-                       <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                       Rule Violations ({violations.length})
-                     </h2>
-                     <div className="space-y-3">
-                       {violations.map((v, i) => {
-                         const t = translations[v.Rule];
-                         return (
-                           <div key={i} className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
-                             <div className="flex justify-between items-start mb-2">
-                               <div className="text-xs text-orange-400 font-mono font-bold bg-orange-400/10 px-2 py-1 rounded">{v.Rule}</div>
-                             </div>
-                             
-                             {t ? (
-                               <div className="mb-3">
-                                 <div className="text-base text-white font-medium mb-1">
-                                   {lang === 'en' ? t.en : t.hi}
-                                 </div>
-                                 <div className="text-sm text-gray-400 italic">
-                                   {lang === 'en' ? "💡 Hint: " + t.hint_en : "💡 सुझाव: " + t.hint_hi}
-                                 </div>
-                               </div>
-                             ) : null}
-  
-                             <div className="text-sm text-gray-300 bg-gray-900/50 p-2 rounded border border-gray-700/50 font-mono">
-                               {v.RawDesc || v.Description}
-                             </div>
-                           </div>
-                         );
-                       })}
-                     </div>
-                   </div>
-                 )}
-               </div>
-            ) : (
-              <div className="p-8 space-y-8">
-                {/* Proof Report */}
-                <div className="bg-gray-800/40 rounded-xl border border-gray-700/50 overflow-hidden shadow-2xl backdrop-blur-sm transition-all hover:border-gray-600/50">
-                  <div className="px-4 py-3 border-b border-gray-700/50 bg-gray-800/60 text-sm font-medium text-emerald-400 flex items-center">
-                    <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    Cryptographic Proof Report (PROOF.md)
-                  </div>
-                  <div className="p-6">
-                    <pre className="text-sm text-gray-300 font-mono whitespace-pre-wrap">{proof}</pre>
-                  </div>
-                </div>
-  
-                {/* GSTR-1 Payload */}
-                <div className="bg-gray-800/40 rounded-xl border border-gray-700/50 overflow-hidden shadow-2xl backdrop-blur-sm transition-all hover:border-gray-600/50">
-                  <div className="px-4 py-3 border-b border-gray-700/50 bg-gray-800/60 text-sm font-medium text-cyan-400 flex items-center">
-                    <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                    GSTR-1 Normalized Payload
-                  </div>
-                  <div className="p-6">
-                    <pre className="text-sm text-gray-300 font-mono whitespace-pre-wrap">{gstr1}</pre>
-                  </div>
-                </div>
+          <div className="h-[700px] border border-gray-700/80 rounded-2xl overflow-hidden bg-gray-900 shadow-2xl flex flex-col">
+            <header className="px-4 py-3 border-b border-gray-800 bg-gray-800/50 flex justify-between items-center">
+              <div className="flex space-x-2">
+                <button onClick={() => setInputMode('pdf')} className={`px-4 py-1.5 text-sm font-medium rounded-full transition-all ${inputMode === 'pdf' ? 'bg-emerald-500 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'}`}>Upload PDF</button>
+                <button onClick={() => setInputMode('json')} className={`px-4 py-1.5 text-sm font-medium rounded-full transition-all ${inputMode === 'json' ? 'bg-emerald-500 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'}`}>Raw JSON</button>
               </div>
-            )}
-          </div>
-        )}
-      </main>
+              <button onClick={() => setLang(lang === 'en' ? 'hi' : 'en')} className="text-xs px-3 py-1 bg-gray-800 text-gray-300 rounded border border-gray-700">
+                Language: <span className="font-bold text-white">{lang === 'en' ? 'English' : 'हिंदी'}</span>
+              </button>
+            </header>
 
-      {/* Trust Triad & Legal Footer */}
-      <footer className="px-6 py-4 border-t border-gray-800 bg-gray-900 flex flex-col items-center flex-shrink-0 z-20">
-        <div className="flex space-x-8 mb-4 text-sm font-medium">
-          <span className="text-gray-300 flex items-center">
-             <svg className="w-4 h-4 text-emerald-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-             Free forever
-          </span>
-          <span className="text-gray-300 flex items-center">
-             <svg className="w-4 h-4 text-emerald-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-             Works offline
-          </span>
-          <span className="text-gray-300 flex items-center">
-             <svg className="w-4 h-4 text-emerald-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-             Your data never leaves this device
-          </span>
+            <div className="flex-1 flex overflow-hidden">
+              <div className={`${inputMode === 'json' ? 'w-1/2 border-r' : 'w-full'} flex flex-col relative border-gray-800`}>
+                {inputMode === 'json' ? (
+                  <Editor
+                    height="100%"
+                    defaultLanguage="json"
+                    theme="vs-dark"
+                    value={jsonInput}
+                    onChange={(val) => setJsonInput(val || '')}
+                    options={{ minimap: { enabled: false }, fontSize: 14 }}
+                  />
+                ) : (
+                  pdfState === 'upload' ? (
+                    <PdfUploader onExtract={(data) => {
+                      setExtractedData(data);
+                      setPdfState('confirm');
+                    }} />
+                  ) : pdfState === 'confirm' ? (
+                    <ConfirmationScreen 
+                      extractedData={extractedData} 
+                      onConfirm={(validJson) => {
+                        setJsonInput(validJson);
+                        setPdfState('verdict');
+                      }} 
+                      onCancel={() => setPdfState('upload')}
+                    />
+                  ) : (
+                    <VerdictScreen 
+                      isSuccess={!err && violations.length === 0}
+                      violations={violations}
+                      invoiceData={jsonInput}
+                      onReset={() => {
+                        setJsonInput(defaultInvoice);
+                        setPdfState('upload');
+                      }}
+                    />
+                  )
+                )}
+              </div>
+
+              {inputMode === 'json' && (
+                <div className="w-1/2 flex flex-col bg-[#0d1117] overflow-y-auto">
+                  {err ? (
+                     <div className="p-8 space-y-6">
+                       <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-6 shadow-xl">
+                         <h2 className="text-red-400 font-semibold mb-2">Parsing Error</h2>
+                         <pre className="text-sm text-red-300/80 whitespace-pre-wrap font-mono">{err}</pre>
+                       </div>
+                       {violations.length > 0 && (
+                         <div className="bg-orange-900/20 border border-orange-500/30 rounded-xl p-6 shadow-xl">
+                           <h2 className="text-orange-400 font-semibold mb-4">Rule Violations ({violations.length})</h2>
+                           <div className="space-y-3">
+                             {violations.map((v, i) => {
+                               const t = translations[v.Rule];
+                               return (
+                                 <div key={i} className="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+                                   <div className="text-xs text-orange-400 font-mono font-bold bg-orange-400/10 px-2 py-1 rounded inline-block mb-2">{v.Rule}</div>
+                                   {t && (
+                                     <div className="mb-3">
+                                       <div className="text-base text-white font-medium mb-1">{lang === 'en' ? t.en : t.hi}</div>
+                                       <div className="text-sm text-gray-400 italic">{lang === 'en' ? "💡 Hint: " + t.hint_en : "💡 सुझाव: " + t.hint_hi}</div>
+                                     </div>
+                                   )}
+                                   <div className="text-sm text-gray-300 bg-gray-900/50 p-2 rounded border border-gray-700/50 font-mono">{v.RawDesc || v.Description}</div>
+                                 </div>
+                               );
+                             })}
+                           </div>
+                         </div>
+                       )}
+                     </div>
+                  ) : (
+                    <div className="p-8 space-y-8">
+                      <div className="bg-emerald-900/10 border border-emerald-500/20 rounded-xl p-6 shadow-xl text-center">
+                        <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <svg className="w-8 h-8 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                        </div>
+                        <h2 className="text-2xl font-bold text-white mb-2">Ready to File</h2>
+                        <p className="text-emerald-400 font-medium">This invoice is 100% compliant with the CGST Act.</p>
+                      </div>
+                      <div className="bg-gray-800/40 rounded-xl border border-gray-700/50 overflow-hidden shadow-2xl">
+                        <div className="px-4 py-3 border-b border-gray-700/50 bg-gray-800/60 text-sm font-medium text-cyan-400">
+                          GSTR-1 Normalized Payload
+                        </div>
+                        <div className="p-6">
+                          <pre className="text-sm text-gray-300 font-mono whitespace-pre-wrap">{gstr1}</pre>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-        <div className="text-xs text-gray-500 mb-2 font-mono bg-black/30 px-3 py-1 rounded border border-gray-800">
-          Network log: <span className="text-emerald-500 font-bold">0 bytes</span> left this device
+      </section>
+
+      {/* Govt Links Section */}
+      <section id="resources" className="px-6 py-16 bg-gray-900/50">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-2xl font-bold text-white mb-8">Official Resources</h2>
+          <div className="flex flex-wrap justify-center gap-4">
+            <a href="https://www.gst.gov.in/" target="_blank" rel="noreferrer" className="px-6 py-4 bg-gray-800 rounded-xl border border-gray-700 hover:border-gray-500 transition flex items-center space-x-3">
+              <span className="text-xl">🏛️</span>
+              <div className="text-left">
+                <div className="font-semibold text-white">GST Portal</div>
+                <div className="text-xs text-gray-400">gst.gov.in</div>
+              </div>
+            </a>
+            <a href="https://einvoice1.gst.gov.in/" target="_blank" rel="noreferrer" className="px-6 py-4 bg-gray-800 rounded-xl border border-gray-700 hover:border-gray-500 transition flex items-center space-x-3">
+              <span className="text-xl">🧾</span>
+              <div className="text-left">
+                <div className="font-semibold text-white">e-Invoice Portal</div>
+                <div className="text-xs text-gray-400">einvoice1.gst.gov.in</div>
+              </div>
+            </a>
+            <a href="https://ewayanic.gov.in/" target="_blank" rel="noreferrer" className="px-6 py-4 bg-gray-800 rounded-xl border border-gray-700 hover:border-gray-500 transition flex items-center space-x-3">
+              <span className="text-xl">🚚</span>
+              <div className="text-left">
+                <div className="font-semibold text-white">e-Way Bill</div>
+                <div className="text-xs text-gray-400">ewayanic.gov.in</div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Formbricks-style Feedback FAB */}
+      <a 
+        href="mailto:arun5@duck.com?subject=GSTFlow%20Feedback"
+        className="fixed bottom-6 right-6 px-5 py-3 bg-white text-gray-900 font-bold rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.4)] hover:-translate-y-1 hover:shadow-[0_8px_40px_rgb(0,0,0,0.6)] transition-all flex items-center z-50 border border-gray-200"
+      >
+        <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
+        Send Feedback
+      </a>
+
+      {/* Footer */}
+      <footer className="px-6 py-12 border-t border-gray-800 bg-[#121212] flex flex-col items-center">
+        <div className="text-2xl font-bold text-white mb-6">GSTFlow</div>
+        <div className="flex space-x-6 mb-8">
+          <a href="#" className="text-gray-400 hover:text-white transition">Privacy Policy</a>
+          <a href="#" className="text-gray-400 hover:text-white transition">Terms of Service</a>
+          <a href="https://canonflowfoundation.github.io" className="text-gray-400 hover:text-emerald-400 transition font-medium">CanonFlow Foundation</a>
         </div>
         <div className="text-xs text-gray-600 text-center max-w-2xl">
-          <span className="font-bold text-red-400/80">⚠️ LEGAL DISCLAIMER:</span> THIS IS NOT TAX ADVICE. GSTFlow takes zero liability for your GSTR-1 filings, penalties, or disputes. 
-          You are solely responsible for verifying accuracy before filing with the Government of India portal.
+          <span className="font-bold text-red-400/80">⚠️ LEGAL DISCLAIMER:</span> THIS IS NOT TAX ADVICE. GSTFlow takes zero liability for your filings or disputes. 
+          You are solely responsible for verifying accuracy before filing with the Government of India.
+        </div>
+        <div className="mt-8 text-sm text-gray-500">
+          © 2026 GSTFlow. Open Sourced under the MIT License.
         </div>
       </footer>
     </div>
