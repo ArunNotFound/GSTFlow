@@ -379,12 +379,12 @@ export default function App() {
                   {err ? (
                      <div className="p-8 space-y-6">
                        <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-6 shadow-xl">
-                         <h2 className="text-red-400 font-semibold mb-2">Parsing Error</h2>
+                         <h2 className="text-red-400 font-semibold mb-2">{lang === 'en' ? 'Parsing Error' : 'पार्सिंग त्रुटि'}</h2>
                          <pre className="text-sm text-red-300/80 whitespace-pre-wrap font-mono">{err}</pre>
                        </div>
                        {violations.length > 0 && (
                          <div className="bg-orange-900/20 border border-orange-500/30 rounded-xl p-6 shadow-xl">
-                           <h2 className="text-orange-400 font-semibold mb-4">Rule Violations ({violations.length})</h2>
+                           <h2 className="text-orange-400 font-semibold mb-4">{lang === 'en' ? 'Rule Violations' : 'नियम उल्लंघन'} ({violations.length})</h2>
                            <div className="space-y-3">
                              {violations.map((v, i) => {
                                const t = translations[v.Rule];
