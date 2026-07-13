@@ -62,3 +62,28 @@ Read the comprehensive technical breakdown and architectural reflections here:
 
 > **My Two Cents (The AI's Perspective):**
 > *Building GSTFlow was a masterclass in separating mathematical truth from the UI layer. By anchoring everything in a single, uncorrupted F# source (`GSTFlow.Rules`), we achieved total determinism. Pushing that logic through NativeAOT for C-level desktop performance, Fable-JS for zero-trust Web processing, and Fable-Dart for offline Android scanning proves that you don't need to rewrite business logic to dominate every platform. GSTFlow isn't just an app; it's an impenetrable ecosystem.*
+
+---
+
+## 📈 Recap, Retrospective, and The Way Forward
+
+### 🛠️ What We Just Did
+In response to our technical X-Ray audit, we executed a "Trust Reset" across the codebase:
+- **Green CI/CD:** We migrated headless environment testing from `flutter test` to `dart test`, ensuring our cross-platform GitHub Actions matrix is stable and green.
+- **Silenced False Positives:** We ripped out heuristic-based RCM (Reverse Charge Mechanism) rules and Buyer POS defaulting. If we don't have explicit, factual data to verify a tax branch, we now explicitly yield an `Unknown` outcome rather than guessing and assuming a "Pass".
+- **Strict Overall Outcome:** Fixed mobile tag-parsing and CLI reducers so that `Warning` or `Unknown` statuses can no longer masquerade as a green tick.
+- **Cryptographic Honesty:** Removed hardcoded placeholder hashes and implemented asynchronous WebCrypto SHA-256 generation on the Web UI, officially migrating from arbitrary `canonflow_signature`s to auditable `payload_digest`s.
+- **Truthful UI:** Rewrote our UI messaging from "100% Compliant" to "No issues found in supported checks," properly positioning GSTFlow as a *Preflight Standard* rather than a legal oracle.
+
+### 🙈 Blindspots & Regrets
+- **Pacing & Drift:** We moved incredibly fast to establish a tri-channel presence (Web, NativeAOT Windows, and Flutter Android). As a result, our platform surface area outpaced our kernel depth, leading to committed generated-code drift (like `fable_dart` desyncs).
+- **Over-inferring Tax Law:** We initially fell into the trap of using heuristics (e.g. HSN prefixes) to determine complex tax laws like RCM. This was a blindspot that violated our core philosophy of deterministic, provable truth. 
+- **The AI Dilemma:** We promised a bundled `llama.cpp` Local AI extraction pipeline, but the probabilistic nature of LLM parsing sits uncomfortably beside our rigid, mathematical F# engine. It remains an unintegrated experiment.
+- **Corpus Size:** Our property-based FsCheck tests are brilliant, but our static fixture corpus is dangerously tiny. 
+
+### 🚀 The Way Forward
+Our next evolution will intentionally **freeze platform expansion** and deepen the core:
+1. **Build the Gold Corpus:** We need to curate a massive, legally-vetted test suite of 1,000+ redacted, real-world Indian GST invoices representing complex edge cases (SEZ without payment, Bill-To/Ship-To, Credit Notes).
+2. **Evidence-Rich Verdicts:** We will evolve the `RuleResult` envelope to not just list errors, but to provide exact parameter diffs (Expected vs Actual), the path to the offending node, and the specific CBIC legal citation.
+3. **Formal POS Decision Tree:** We need to model the full statutory branches for Place of Supply (Goods movement vs. Service performance) rather than relying on a flat Buyer State fallback.
+4. **CI-Enforced Generation:** We will remove all generated JS/Dart files from source control and force CI to generate them fresh on every build to guarantee zero drift between the F# kernel and the mobile apps.
