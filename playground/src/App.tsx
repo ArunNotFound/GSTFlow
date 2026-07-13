@@ -62,6 +62,18 @@ const translations: Record<string, { en: string, hi: string, hint_en: string, hi
     hint_en: "Set ReverseCharge to 'Y'.",
     hint_hi: "ReverseCharge को 'Y' पर सेट करें।"
   },
+  RCM_LAW_UNKNOWN: {
+    en: "HSN may attract Reverse Charge, but exact applicability cannot be inferred.",
+    hi: "इस HSN पर रिवर्स चार्ज लग सकता है, लेकिन स्पष्ट जानकारी के बिना निर्णय नहीं लिया जा सकता।",
+    hint_en: "Ensure ReverseCharge flag is correctly marked based on the nature of service.",
+    hint_hi: "सेवा की प्रकृति के आधार पर ReverseCharge फ्लैग की जाँच करें।"
+  },
+  PLACE_OF_SUPPLY_ASSUMED: {
+    en: "Place of Supply defaulted to Buyer State.",
+    hi: "आपूर्ति का स्थान क्रेता के राज्य को मान लिया गया है।",
+    hint_en: "Check if the movement of goods or place of service terminates elsewhere.",
+    hint_hi: "जाँचें कि क्या माल या सेवा का स्थान कहीं और समाप्त होता है।"
+  },
   GSTIN_STATE_MATCH: {
     en: "Buyer State Code does not match GSTIN prefix.",
     hi: "क्रेता का राज्य कोड GSTIN के पहले 2 अंकों से मेल नहीं खाता।",
@@ -273,7 +285,7 @@ export default function App() {
   let violations: any[] = [];
   
   try {
-      const res = compileInvoice(jsonInput);
+      const res = compileInvoice(jsonInput, "sha256:browser_playground_no_hash");
       if (res.success) {
           gstr1 = res.summary;
       } else {

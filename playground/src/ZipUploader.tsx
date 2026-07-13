@@ -72,7 +72,8 @@ export default function ZipUploader() {
           setLogs(prev => [...prev.slice(-20), `🔐 [CFF VERIFIED] ${fileName} digest is intact.`]);
         }
 
-        const res = compileInvoice(contentToVerify);
+        const hashHex = await generateHash(contentToVerify);
+        const res = compileInvoice(contentToVerify, `sha256:${hashHex}`);
         if (res.success) {
           passCount++;
           reportCsv += `"${fileName}","PASSED","None"\n`;

@@ -93,7 +93,7 @@ module Compiler =
                 violations <- failRule "RCM_TAX_CHARGED" "Invoice is marked for Reverse Charge (RCM). Seller cannot collect tax; tax amounts must be 0." :: violations
         else
             if isRcmHsn item.Hsn then
-                violations <- failRule "RCM_LAW" (sprintf "HSN '%s' falls under mandatory Reverse Charge. The invoice must mark ReverseCharge=Y and tax amounts must be 0." item.Hsn) :: violations
+                violations <- unknownRule "RCM_LAW_UNKNOWN" (sprintf "HSN '%s' may fall under Reverse Charge, but applicability cannot be safely inferred without supplier and recipient context." item.Hsn) :: violations
             
             if isInterstate then
                 if item.Tax.Cgst > 0m || item.Tax.Sgst > 0m then
@@ -213,15 +213,19 @@ module Compiler =
                     p
                 | None ->
                     match buyer with
-                    | Some b when GSTIN.value b.Gstin <> "URP" -> b.StateCode
+                    | Some b when GSTIN.value b.Gstin <> "URP" -> 
+                        violations <- unknownRule "PLACE_OF_SUPPLY_ASSUMED" "Place of Supply defaulted to Buyer State, but goods movement termination and service POS branches were not verified." :: violations
+                        b.StateCode
                     | _ -> 
                         violations <- unknownRule "PLACE_OF_SUPPLY_UNKNOWN" "Place of supply cannot be safely derived for unregistered buyer without explicit POS" :: violations
                         "UNKNOWN"
                 
             let isInterstate = 
-                seller.StateCode <> pos || 
-                seller.IsSez || 
-                (match buyer with Some b -> b.IsSez | None -> false)
+                pos <> "UNKNOWN" && (
+                    seller.StateCode <> pos || 
+                    seller.IsSez || 
+                    (match buyer with Some b -> b.IsSez | None -> false)
+                )
             
             let isDocumentRcm =
                 match raw.ReverseCharge with

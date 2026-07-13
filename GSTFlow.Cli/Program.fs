@@ -29,8 +29,14 @@ let tryReadInvoice path =
     try
         let jsonString = File.ReadAllText path
         let extra = Extra.empty |> Extra.withDecimal
+        
+        let bytes = System.Text.Encoding.UTF8.GetBytes(jsonString)
+        use sha256 = System.Security.Cryptography.SHA256.Create()
+        let hashBytes = sha256.ComputeHash(bytes)
+        let hashHex = String.concat "" (Array.map (sprintf "%02x") hashBytes)
+        
         match Decode.Auto.fromString<RawInvoice>(jsonString, extra = extra) with
-        | Ok invoice -> Ok (invoice, Hash.computeSha256 jsonString)
+        | Ok invoice -> Ok (invoice, "sha256:" + hashHex)
         | Error msg -> Error msg
     with e ->
         Error e.Message
