@@ -12,18 +12,18 @@ module Generators =
         let taxType = if ir.IsInterstate then "IGST" else "CGST_SGST"
         
         $"""{{
-  "invoiceNumber": "{ir.Invoice.InvoiceNumber}",
+  "invoiceNumber": "{ir.SourceInvoice.InvoiceNumber}",
   "type": "{supplyTypeStr}",
   "placeOfSupply": "{ir.PlaceOfSupply}",
   "taxClassification": "{taxType}",
-  "itemsCount": {ir.Invoice.Items.Length}
+  "itemsCount": {ir.SourceInvoice.Items.Length}
 }}"""
 
     let emitValidationReport (ir: GSTCanonicalIR) =
         let expectedTax = if ir.IsInterstate then "IGST" else "CGST+SGST"
-        let hasIgst = ir.Invoice.Items |> List.exists (fun i -> i.Tax.Igst > 0m)
-        let hasCgst = ir.Invoice.Items |> List.exists (fun i -> i.Tax.Cgst > 0m)
-        let hasSgst = ir.Invoice.Items |> List.exists (fun i -> i.Tax.Sgst > 0m)
+        let hasIgst = ir.SourceInvoice.Items |> List.exists (fun i -> i.Tax.Igst > 0m)
+        let hasCgst = ir.SourceInvoice.Items |> List.exists (fun i -> i.Tax.Cgst > 0m)
+        let hasSgst = ir.SourceInvoice.Items |> List.exists (fun i -> i.Tax.Sgst > 0m)
         
         let actualTax = 
             if hasIgst && not hasCgst && not hasSgst then "IGST"
@@ -35,14 +35,14 @@ module Generators =
 
         $"""# GSTFlow Validation Report
 
-## Invoice {ir.Invoice.InvoiceNumber}
+## Invoice {ir.SourceInvoice.InvoiceNumber}
 
 Canonical GST IR: {grade}
 Summary JSON: {grade}
 
 ## Verified Tax Logic
 
-Seller state: {ir.Invoice.Seller.StateCode}
+Seller state: {ir.SourceInvoice.Seller.StateCode}
 Place of supply: {ir.PlaceOfSupply}
 Supply type: {if ir.IsInterstate then "Interstate" else "Intrastate"}
 Expected tax: {expectedTax}
