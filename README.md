@@ -21,11 +21,11 @@ By bridging our pure F# engine directly to the Windows OS using C-bindings (`Unm
 - **Local AI Extraction (Bootstrapped):** We bundle a lightweight `llama.cpp` server and a tiny `Phi-3` model directly inside the Windows installer. It silently spins up in the background to extract unstructured PDF invoices into rigid JSON—guaranteeing total offline privacy without making the accountant run command-line scripts.
 - **Unrestricted Disk Access:** Directly ingest local ZIPs and output signed CFF packages seamlessly.
 
-### 3. Mobile Inspector (The Field Agent)
-**Powered by: Fable Dart + Flutter `mobile_scanner` (Experimental)**
-For on-the-go verification. We used the revolutionary `Fable 5.6` compiler to transpile our entire F# rules engine natively into strongly-typed **Dart** classes.
-- **Offline QR Scanner:** Accountants can open the app, scan a printed GST invoice QR code, and our Fable-Dart engine instantly evaluates it offline on the Android device.
-- **Premium Flutter UI:** Clean, glassmorphic verification cards and target overlays that clearly flag illegal inter-state CGST charges or arithmetic miscalculations.
+### 3. Mobile Ecosystem: Two-Tier Field Deployment
+**Powered by: 100% Offline Engine Strategy**
+To eliminate Dart's `double.parse` / IEEE 754 64-bit floating-point precision limitations (which compromise ₹1 statutory tax rounding), we have pivoted our mobile deployment into a two-tier strategy:
+- **3A. GSTFlow Lite (The "Facebook Lite" of Tax Validation):** An ultra-lightweight (<10MB), high-speed app wrapper around our Wasm/JS engine for users on the move. Features zero AI bloat, instant startup, local SQLite historical backup, JSON & ZIP verification, SHA-256 cryptographic stamping (`payload_digest`), and one-tap CFF ZIP export.
+- **3B. GSTFlow Pro ("God Mode" Mobile Auditor):** Full field power tool featuring offline Camera QR / Barcode scanning of printed invoices, on-device vision/OCR receipt ingestion, and full SQLite sync with Windows Desktop.
 
 ## CI/CD Pipeline & Automated Artifacts
 The repository is fully automated via GitHub Actions:
