@@ -12,6 +12,10 @@ using GSTFlow.Emit;
 
 namespace GSTFlow.Native
 {
+    [System.Text.Json.Serialization.JsonSourceGenerationOptions()]
+    [System.Text.Json.Serialization.JsonSerializable(typeof(GSTFlow.Core.Verification.VerdictEnvelope))]
+    internal partial class CanonFlowJsonContext : System.Text.Json.Serialization.JsonSerializerContext { }
+
     public static class NativeInterface
     {
         // Helper to convert C-style string to C# string
@@ -46,11 +50,16 @@ namespace GSTFlow.Native
                 if (decodeResult.IsOk)
                 {
                     var rawInvoice = decodeResult.ResultValue;
-                    string hash = Hash.computeSha256(jsonString);
+                    var bytes = System.Text.Encoding.UTF8.GetBytes(jsonString);
+                    byte[] hashBytes;
+                    using (var sha256 = System.Security.Cryptography.SHA256.Create()) {
+                        hashBytes = sha256.ComputeHash(bytes);
+                    }
+                    string hash = "sha256:" + string.Concat(hashBytes.Select(b => b.ToString("x2")));
                     var result = Compiler.compile(rawInvoice, hash);
 
                     var serializeEnv = new Func<GSTFlow.Core.Verification.VerdictEnvelope, string>(
-                        env => System.Text.Json.JsonSerializer.Serialize(env)
+                        env => System.Text.Json.JsonSerializer.Serialize(env, CanonFlowJsonContext.Default.VerdictEnvelope)
                     );
 
                     var violationsList = result.Envelope.Results
