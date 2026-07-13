@@ -131,7 +131,13 @@ library.Verification_RuleResult Function(String) Compiler_warnRule(String id) =>
 
 library.Verification_RuleResult Function(String) Compiler_unknownRule(String id) => (String arg20$0040) => Compiler_createRule<String>(const library.Verification_RuleOutcome(/* Unknown */ 3), id, arg20$0040);
 
-final Compiler_validStateCodes = set$.ofList<String>(list_11.append<String>(seq.toList<String>(seq.delay<String>(() => seq.map<int, String>((int i) => (string.toText(string.printf('%02d')))(i), range.rangeInt(1, 1, 38)))), list_11.ofArray(const ['97', '99'])), types.Comparer((String x, String y) => x.compareTo(y)));
+final Compiler_validStateCodes = set$.ofList<String>(list_11.append<String>(seq.toList<String>(seq.delay<String>(() => seq.map<int, String>((int i) {
+    if (i < 10) {
+        return '0' + i.toString();
+    } else {
+        return i.toString();
+    }
+}, range.rangeInt(1, 1, 38)))), list_11.ofArray(const ['97', '99'])), types.Comparer((String x, String y) => x.compareTo(y)));
 
 final Compiler_validRateSlabs = set$.ofList<dynamic>(list_11.ofArray([decimal.fromParts(0, 0, 0, false, 0), decimal.fromParts(1, 0, 0, false, 1), decimal.fromParts(25, 0, 0, false, 2), decimal.fromParts(15, 0, 0, false, 1), decimal.fromParts(3, 0, 0, false, 0), decimal.fromParts(5, 0, 0, false, 0), decimal.fromParts(12, 0, 0, false, 0), decimal.fromParts(18, 0, 0, false, 0), decimal.fromParts(28, 0, 0, false, 0)]), types.Comparer((dynamic x, dynamic y) => x.compareTo(y)));
 
@@ -140,13 +146,11 @@ bool Compiler_isValidHsn(String hsn) => reg_exp.isMatch(reg_exp.create('^(\\d{4}
 result.FSharpResult$2<library.Party, library.Verification_RuleResult> Compiler_validateParty(String role, RawParty raw) {
     final result.FSharpResult$2<library.GSTIN, String> matchValue = library.GSTINModule_create(raw.Gstin);
     if (matchValue.tag == /* Error */ 1) {
-        final String Function(String) Function(String) Function(String) tmp_arg = string.toText(string.printf('%s GSTIN \'%s\' is invalid: %s'));
-        final String tmp_combine = raw.Gstin;
+        final String tmp_combine = ((role + ' GSTIN \'') + raw.Gstin) + '\' is invalid: ';
         final matchValue_2 = matchValue as result.FSharpResult$2_Error<library.GSTIN, String>;
-        return result.FSharpResult$2_Error<library.Party, library.Verification_RuleResult>((Compiler_failRule('GSTIN_FORMAT'))(((tmp_arg(role))(tmp_combine))(matchValue_2.ErrorValue)));
+        return result.FSharpResult$2_Error<library.Party, library.Verification_RuleResult>((Compiler_failRule('GSTIN_FORMAT'))(tmp_combine + matchValue_2.ErrorValue));
     } else if (raw.Gstin.substring(0, 2) != raw.StateCode) {
-        final String arg_2 = raw.Gstin.substring(0, 2);
-        return result.FSharpResult$2_Error<library.Party, library.Verification_RuleResult>((Compiler_failRule('GSTIN_STATE_MATCH'))((((string.toText(string.printf('%s StateCode \'%s\' does not match GSTIN prefix \'%s\'')))(role))(raw.StateCode))(arg_2)));
+        return result.FSharpResult$2_Error<library.Party, library.Verification_RuleResult>((Compiler_failRule('GSTIN_STATE_MATCH'))(((((role + ' StateCode \'') + raw.StateCode) + '\' does not match GSTIN prefix \'') + raw.Gstin.substring(0, 2)) + '\''));
     } else {
         final matchValue_3 = matchValue as result.FSharpResult$2_Ok<library.GSTIN, String>;
         final library.GSTIN tmp_combine_2 = matchValue_3.ResultValue;
@@ -161,10 +165,10 @@ bool Compiler_isRcmHsn(String hsn) => list_11.exists<String>((String p) => hsn.s
 list_11.FSharpList<library.Verification_RuleResult> Compiler_validateItem(bool isInterstate, bool isDocumentRcm, RawInvoiceItem item) {
     var violations = list_11.empty<library.Verification_RuleResult>();
     if (!(Compiler_isValidHsn(item.Hsn))) {
-        violations = list_11.cons((Compiler_failRule('HSN_FORMAT'))((string.toText(string.printf('HSN \'%s\' must be exactly 4, 6, or 8 digits')))(item.Hsn)), violations);
+        violations = list_11.cons((Compiler_failRule('HSN_FORMAT'))(('HSN \'' + item.Hsn) + '\' must be exactly 4, 6, or 8 digits'), violations);
     }
     if (!(set$.FSharpSet__Contains<dynamic>(Compiler_validRateSlabs, item.GstRate))) {
-        violations = list_11.cons((Compiler_failRule('RATE_SLAB'))((string.toText(string.printf('GST Rate %M is not a valid Indian slab (0, 0.1, 0.25, 1.5, 3, 5, 12, 18, 28)')))(item.GstRate)), violations);
+        violations = list_11.cons((Compiler_failRule('RATE_SLAB'))(('GST Rate ' + item.GstRate.toString()) + ' is not a valid Indian slab (0, 0.1, 0.25, 1.5, 3, 5, 12, 18, 28)'), violations);
     }
     final dynamic expectedTax = decimal.round(decimal.op_Multiply(item.TaxableValue, decimal.op_Division(item.GstRate, decimal.fromParts(100, 0, 0, false, 0))), 2);
     if (isDocumentRcm) {
@@ -180,14 +184,14 @@ list_11.FSharpList<library.Verification_RuleResult> Compiler_validateItem(bool i
         }
     } else {
         if (Compiler_isRcmHsn(item.Hsn)) {
-            violations = list_11.cons((Compiler_failRule('RCM_LAW'))((string.toText(string.printf('HSN \'%s\' falls under mandatory Reverse Charge. The invoice must mark ReverseCharge=Y and tax amounts must be 0.')))(item.Hsn)), violations);
+            violations = list_11.cons((Compiler_unknownRule('RCM_LAW_UNKNOWN'))(('HSN \'' + item.Hsn) + '\' may fall under Reverse Charge, but applicability cannot be safely inferred without supplier and recipient context.'), violations);
         }
         if (isInterstate) {
             if ((item.Tax.Cgst.compareTo(decimal.fromParts(0, 0, 0, false, 0)) > 0) || (item.Tax.Sgst.compareTo(decimal.fromParts(0, 0, 0, false, 0)) > 0)) {
                 violations = list_11.cons((Compiler_failRule('IGST_CGST_LAW'))('Interstate supply cannot have CGST or SGST'), violations);
             }
             if (decimal.abs(decimal.op_Subtraction(item.Tax.Igst, expectedTax)).compareTo(decimal.fromParts(5, 0, 0, false, 1)) > 0) {
-                violations = list_11.cons((Compiler_failRule('TAX_AMOUNT'))(((string.toText(string.printf('Expected IGST approx %M but got %M (failed Sec 170 / item math)')))(expectedTax))(item.Tax.Igst)), violations);
+                violations = list_11.cons((Compiler_failRule('TAX_AMOUNT'))(((('Expected IGST approx ' + expectedTax.toString()) + ' but got ') + item.Tax.Igst.toString()) + ' (failed Sec 170 / item math)'), violations);
             }
         } else {
             if (item.Tax.Igst.compareTo(decimal.fromParts(0, 0, 0, false, 0)) > 0) {
@@ -195,7 +199,7 @@ list_11.FSharpList<library.Verification_RuleResult> Compiler_validateItem(bool i
             }
             final dynamic expectedSplit = decimal.round(decimal.op_Division(expectedTax, decimal.fromParts(2, 0, 0, false, 0)), 2);
             if ((decimal.abs(decimal.op_Subtraction(item.Tax.Cgst, expectedSplit)).compareTo(decimal.fromParts(5, 0, 0, false, 1)) > 0) || (decimal.abs(decimal.op_Subtraction(item.Tax.Sgst, expectedSplit)).compareTo(decimal.fromParts(5, 0, 0, false, 1)) > 0)) {
-                violations = list_11.cons((Compiler_failRule('TAX_AMOUNT'))((((string.toText(string.printf('Expected CGST/SGST approx %M but got C:%M S:%M')))(expectedSplit))(item.Tax.Cgst))(item.Tax.Sgst)), violations);
+                violations = list_11.cons((Compiler_failRule('TAX_AMOUNT'))((((('Expected CGST/SGST approx ' + expectedSplit.toString()) + ' but got C:') + item.Tax.Cgst.toString()) + ' S:') + item.Tax.Sgst.toString()), violations);
             }
         }
     }
@@ -214,7 +218,7 @@ list_11.FSharpList<library.Verification_RuleResult> Compiler_validateItem(bool i
     } else if (!isDocumentRcm) {
         final dynamic expectedCess = decimal.round(decimal.op_Multiply(item.TaxableValue, decimal.op_Division(types.value(matchValue_1), decimal.fromParts(100, 0, 0, false, 0))), 2);
         if (decimal.abs(decimal.op_Subtraction(types.value(matchValue_2), expectedCess)).compareTo(decimal.fromParts(5, 0, 0, false, 1)) > 0) {
-            violations = list_11.cons((Compiler_failRule('CESS_ARITHMETIC'))(((string.toText(string.printf('Expected Cess approx %M but got %M')))(expectedCess))(types.value(matchValue_2))), violations);
+            violations = list_11.cons((Compiler_failRule('CESS_ARITHMETIC'))((('Expected Cess approx ' + expectedCess.toString()) + ' but got ') + types.value(matchValue_2).toString()), violations);
         }
     }
     return violations;
@@ -279,7 +283,7 @@ CompilationResult Compiler_compile(RawInvoice raw, String hash) {
             docType = const library.DocumentType$(/* INV */ 0);
             break;
         default:
-            violations = list_11.cons((Compiler_failRule('DOC_TYPE'))((string.toText(string.printf('Invalid DocumentType \'%s\'')))(other)), violations);
+            violations = list_11.cons((Compiler_failRule('DOC_TYPE'))(('Invalid DocumentType \'' + other) + '\''), violations);
             docType = const library.DocumentType$(/* INV */ 0);
     }
     switch (docType.tag) {
@@ -310,7 +314,7 @@ CompilationResult Compiler_compile(RawInvoice raw, String hash) {
         buyerRes = null;
     } else if (string.isNullOrWhiteSpace(types.value(matchValue_2).Gstin)) {
         if (!(set$.FSharpSet__Contains<String>(Compiler_validStateCodes, types.value(matchValue_2).StateCode))) {
-            final err = (Compiler_failRule('STATE_CODE'))((string.toText(string.printf('Buyer State Code \'%s\' is not in the valid vocabulary (01-38, 97, 99)')))(types.value(matchValue_2).StateCode));
+            final err = (Compiler_failRule('STATE_CODE'))(('Buyer State Code \'' + types.value(matchValue_2).StateCode) + '\' is not in the valid vocabulary (01-38, 97, 99)');
             violations = list_11.cons(err, violations);
             buyerRes = types.Some(result.FSharpResult$2_Error<library.Party, library.Verification_RuleResult>(err));
         } else {
@@ -372,6 +376,7 @@ CompilationResult Compiler_compile(RawInvoice raw, String hash) {
         final types.Some<String>? matchValue_5 = raw.PlaceOfSupply;
         if (matchValue_5 == null) {
             if ((buyer != null) && (library.GSTINModule_value(types.value(buyer).Gstin) != 'URP')) {
+                violations = list_11.cons((Compiler_unknownRule('PLACE_OF_SUPPLY_ASSUMED'))('Place of Supply defaulted to Buyer State, but goods movement termination and service POS branches were not verified.'), violations);
                 pos = types.value(buyer).StateCode;
             } else {
                 violations = list_11.cons((Compiler_unknownRule('PLACE_OF_SUPPLY_UNKNOWN'))('Place of supply cannot be safely derived for unregistered buyer without explicit POS'), violations);
@@ -380,10 +385,10 @@ CompilationResult Compiler_compile(RawInvoice raw, String hash) {
         } else if (set$.FSharpSet__Contains<String>(Compiler_validStateCodes, types.value(matchValue_5))) {
             pos = types.value(matchValue_5);
         } else {
-            violations = list_11.cons((Compiler_failRule('PLACE_OF_SUPPLY'))((string.toText(string.printf('Invalid PlaceOfSupply \'%s\'')))(types.value(matchValue_5))), violations);
+            violations = list_11.cons((Compiler_failRule('PLACE_OF_SUPPLY'))(('Invalid PlaceOfSupply \'' + types.value(matchValue_5)) + '\''), violations);
             pos = types.value(matchValue_5);
         }
-        final bool isInterstate = ((seller.StateCode != pos) || seller.IsSez) || ((buyer == null) ? false : types.value(buyer).IsSez);
+        final bool isInterstate = (pos != 'UNKNOWN') && (((seller.StateCode != pos) || seller.IsSez) || ((buyer == null) ? false : types.value(buyer).IsSez));
         late final bool isDocumentRcm;
         final types.Some<String>? matchValue_6 = raw.ReverseCharge;
         if (matchValue_6 == null) {

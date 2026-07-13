@@ -1,0 +1,1 @@
+F# discriminated union serialization is not supported. Consider authoring a custom converter for the type. The unsupported member type is located on type 'GSTFlow.Core.Verification+RuleOutcome'. Path: $.OverallOutcome.

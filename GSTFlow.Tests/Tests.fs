@@ -85,8 +85,9 @@ let ``Law: Interstate supply must absolutely reject local taxes`` (cgst: float) 
     let cgstVal = decimal (Math.Abs(cgst))
     let sgstVal = decimal (Math.Abs(sgst))
     
-    // Interstate (Seller 29, Buyer 27)
-    let raw = createDummyInvoice "29AAGCB7383J1Z4" "29" (Some "27AAPFU0939F1ZV") (Some "27") 18m cgstVal sgstVal
+    // Interstate (Seller 29, Buyer 27, POS 27)
+    let mutable raw = createDummyInvoice "29AAGCB7383J1Z4" "29" (Some "27AAPFU0939F1ZV") (Some "27") 18m cgstVal sgstVal
+    raw <- { raw with PlaceOfSupply = Some "27" }
     let result = Compiler.compile raw "dummy-hash"
     
     if cgstVal > 0m || sgstVal > 0m then
@@ -98,8 +99,9 @@ let ``Law: Intrastate supply must absolutely reject integrated tax`` (igst: floa
     if Double.IsNaN(igst) || Double.IsInfinity(igst) || Math.Abs(igst) > 1000000000.0 then true else
     let igstVal = decimal (Math.Abs(igst))
     
-    // Intrastate (Seller 29, Buyer 29)
-    let raw = createDummyInvoice "29AAGCB7383J1Z4" "29" (Some "29AAGCB7383J1Z4") (Some "29") igstVal 9m 9m
+    // Intrastate (Seller 29, Buyer 29, POS 29)
+    let mutable raw = createDummyInvoice "29AAGCB7383J1Z4" "29" (Some "29AAGCB7383J1Z4") (Some "29") igstVal 9m 9m
+    raw <- { raw with PlaceOfSupply = Some "29" }
     let result = Compiler.compile raw "dummy-hash"
     
     if igstVal > 0m then
@@ -107,15 +109,13 @@ let ``Law: Intrastate supply must absolutely reject integrated tax`` (igst: floa
     else true
 
 [<Property>]
-let ``Law: B2C supply implicitly binds Place Of Supply to Seller State (Intrastate)`` (igst: float) =
+let ``Law: Missing POS emits PLACE_OF_SUPPLY_UNKNOWN`` (igst: float) =
     if Double.IsNaN(igst) || Double.IsInfinity(igst) || Math.Abs(igst) > 1000000000.0 then true else
     let igstVal = decimal (Math.Abs(igst))
     
-    // B2C (No Buyer)
+    // B2C (No Buyer, No POS)
     let raw = createDummyInvoice "29AAGCB7383J1Z4" "29" None None igstVal 9m 9m
     let result = Compiler.compile raw "dummy-hash"
     
-    // If it's intrastate, it must reject IGST. We prove it's treated as Intrastate.
-    if igstVal > 0m then
-        result.Envelope.Results |> List.exists (fun v -> v.Metadata.RuleId = "IGST_CGST_LAW")
-    else true
+    // It must emit PLACE_OF_SUPPLY_UNKNOWN and skip IGST/CGST laws
+    result.Envelope.Results |> List.exists (fun v -> v.Metadata.RuleId = "PLACE_OF_SUPPLY_UNKNOWN")

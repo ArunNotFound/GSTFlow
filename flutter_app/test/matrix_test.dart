@@ -1,4 +1,4 @@
-import 'package:flutter_test/flutter_test.dart';
+import 'package:test/test.dart';
 import 'package:gstflow/invoice_parser.dart';
 import 'package:gstflow/fable_dart/Library.dart' as engine;
 import 'dart:convert';

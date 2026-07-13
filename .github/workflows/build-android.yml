@@ -57,7 +57,7 @@ jobs:
         working-directory: flutter_app
         run: |
           flutter pub get
-          flutter test test/matrix_test.dart
+          dart test
           flutter build apk --release
 
       - name: Upload APK Artifact

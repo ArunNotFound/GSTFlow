@@ -72,12 +72,8 @@ module Compiler =
                 Ok { Party.Gstin = g; Party.StateCode = raw.StateCode; Party.IsSez = isSez }
         | Error e -> Error (failRule "GSTIN_FORMAT" (role + " GSTIN '" + raw.Gstin + "' is invalid: " + e))
 
-    let private isRcmHsn (hsn: string) =
-        // GTA, Legal, Sponsorship, Security, etc.
-        let prefixes = ["9965"; "9967"; "9973"; "9982"; "9983"; "9985"]
-        prefixes |> List.exists (fun p -> hsn.StartsWith(p))
 
-    let private validateItem (isInterstate: bool) (isDocumentRcm: bool) (item: RawInvoiceItem) =
+    let private validateItem (isInterstate: bool option) (isDocumentRcm: bool) (item: RawInvoiceItem) =
         let mutable violations = []
 
         if not (isValidHsn item.Hsn) then
@@ -92,22 +88,25 @@ module Compiler =
             if item.Tax.Igst > 0m || item.Tax.Cgst > 0m || item.Tax.Sgst > 0m || (match item.Tax.Cess with Some c -> c > 0m | None -> false) then
                 violations <- failRule "RCM_TAX_CHARGED" "Invoice is marked for Reverse Charge (RCM). Seller cannot collect tax; tax amounts must be 0." :: violations
         else
-            if isRcmHsn item.Hsn then
-                violations <- unknownRule "RCM_LAW_UNKNOWN" ("HSN '" + item.Hsn + "' may fall under Reverse Charge, but applicability cannot be safely inferred without supplier and recipient context.") :: violations
-            
-            if isInterstate then
+            match isInterstate with
+            | Some true ->
                 if item.Tax.Cgst > 0m || item.Tax.Sgst > 0m then
                     violations <- failRule "IGST_CGST_LAW" "Interstate supply cannot have CGST or SGST" :: violations
                 
                 if Math.Abs(item.Tax.Igst - expectedTax) > 0.5m then
                     violations <- failRule "TAX_AMOUNT" ("Expected IGST approx " + string expectedTax + " but got " + string item.Tax.Igst + " (failed Sec 170 / item math)") :: violations
-            else
+            | Some false ->
                 if item.Tax.Igst > 0m then
                     violations <- failRule "IGST_CGST_LAW" "Intrastate supply cannot have IGST" :: violations
                 
                 let expectedSplit = Math.Round(expectedTax / 2m, 2)
                 if Math.Abs(item.Tax.Cgst - expectedSplit) > 0.5m || Math.Abs(item.Tax.Sgst - expectedSplit) > 0.5m then
                     violations <- failRule "TAX_AMOUNT" ("Expected CGST/SGST approx " + string expectedSplit + " but got C:" + string item.Tax.Cgst + " S:" + string item.Tax.Sgst) :: violations
+            | None ->
+                // Math checks only, no law checks
+                let totalTax = item.Tax.Igst + item.Tax.Cgst + item.Tax.Sgst
+                if Math.Abs(totalTax - expectedTax) > 0.5m then
+                    violations <- failRule "TAX_AMOUNT" ("Expected total tax approx " + string expectedTax + " but got " + string totalTax) :: violations
                 
         match item.CessRate, item.Tax.Cess with
         | Some crate, Some cval ->
@@ -214,18 +213,21 @@ module Compiler =
                 | None ->
                     match buyer with
                     | Some b when GSTIN.value b.Gstin <> "URP" -> 
-                        violations <- unknownRule "PLACE_OF_SUPPLY_ASSUMED" "Place of Supply defaulted to Buyer State, but goods movement termination and service POS branches were not verified." :: violations
-                        b.StateCode
+                        violations <- unknownRule "PLACE_OF_SUPPLY_ASSUMED" "Place of supply was not explicitly provided. Cannot safely infer from buyer GSTIN without delivery context." :: violations
+                        "UNKNOWN"
                     | _ -> 
                         violations <- unknownRule "PLACE_OF_SUPPLY_UNKNOWN" "Place of supply cannot be safely derived for unregistered buyer without explicit POS" :: violations
                         "UNKNOWN"
                 
-            let isInterstate = 
-                pos <> "UNKNOWN" && (
+            let isInterstateOpt = 
+                if pos = "UNKNOWN" then None
+                else Some (
                     seller.StateCode <> pos || 
                     seller.IsSez || 
                     (match buyer with Some b -> b.IsSez | None -> false)
                 )
+            
+            let isInterstate = match isInterstateOpt with Some x -> x | None -> false
             
             let isDocumentRcm =
                 match raw.ReverseCharge with
@@ -240,7 +242,7 @@ module Compiler =
                 | Some b when GSTIN.value b.Gstin <> "URP" -> B2B
                 | _ -> B2C
                 
-            let itemViolations = raw.Items |> List.collect (validateItem isInterstate isDocumentRcm)
+            let itemViolations = raw.Items |> List.collect (validateItem isInterstateOpt isDocumentRcm)
             violations <- itemViolations @ violations
             
             // Section 170 Rounding Law: Total tax must be rounded to nearest Rupee

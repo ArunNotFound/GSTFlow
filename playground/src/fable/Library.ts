@@ -15,7 +15,7 @@ import { filter, map, toArray } from "./fable_modules/fable-library-ts.5.6.0/Lis
 import { value as value_7, Option } from "./fable_modules/fable-library-ts.5.6.0/Option.ts";
 import { emitValidationReport, emitSummaryJson } from "./GSTFlow.Emit/Library.ts";
 
-export function compileInvoice(jsonString: string): any {
+export function compileInvoice(jsonString: string, hash: string): any {
     let copyOfStruct: string = (undefined as any), summary_2: any = (undefined as any), proof_2: any = (undefined as any), summary_1: any = (undefined as any), proof_1: any = (undefined as any), success: boolean = (undefined as any);
     const extra_3: ExtraCoders = new ExtraCoders((copyOfStruct = newGuid(), copyOfStruct), add<string, [((arg0: any) => any), ((arg0: string) => ((arg0: any) => FSharpResult$2_$union<any, [string, ErrorReason_$union]>))]>("System.Decimal", [decimal, (path: string): ((arg0: any) => FSharpResult$2_$union<decimal_1, [string, ErrorReason_$union]>) => ((value_1: any): FSharpResult$2_$union<decimal_1, [string, ErrorReason_$union]> => decimal_2(path, value_1))] as [((arg0: any) => any), ((arg0: string) => ((arg0: any) => FSharpResult$2_$union<any, [string, ErrorReason_$union]>))], empty.Coders));
     const decodeInvoice: FSharpResult$2_$union<RawInvoice, string> = fromString<RawInvoice>(uncurry2(Auto_generateBoxedDecoder_Z6670B51(RawInvoice_$reflection(), undefined, extra_3)), jsonString);
@@ -31,7 +31,7 @@ export function compileInvoice(jsonString: string): any {
         }));
     }
     else {
-        const result: CompilationResult = Compiler_compile(decodeInvoice.fields[0] as RawInvoice, "hash_not_computed_in_wasm");
+        const result: CompilationResult = Compiler_compile(decodeInvoice.fields[0] as RawInvoice, hash);
         const serializeEnv = (env: Verification_VerdictEnvelope): string => toString(0, Auto_generateBoxedEncoder_437914C6(Verification_VerdictEnvelope_$reflection(), undefined, extra_3, undefined)(env));
         const violations: MutableArray<{ Description: string, Rule: string }> = toArray<{ Description: string, Rule: string }>(map<Verification_RuleResult, { Description: string, Rule: string }>((r_1: Verification_RuleResult): { Description: string, Rule: string } => ({
             Description: r_1.Metadata.MessageKey,

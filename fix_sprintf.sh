@@ -1,0 +1,12 @@
+sed -i 's/sprintf "%02d" i/if i < 10 then "0" + string i else string i/g' GSTFlow.Rules/Library.fs
+sed -i 's/sprintf "%s StateCode '\''%s'\'' does not match GSTIN prefix '\''%s'\''" role raw.StateCode (raw.Gstin.Substring(0, 2))/role + " StateCode \x27" + raw.StateCode + "\x27 does not match GSTIN prefix \x27" + raw.Gstin.Substring(0, 2) + "\x27"/g' GSTFlow.Rules/Library.fs
+sed -i 's/sprintf "%s GSTIN '\''%s'\'' is invalid: %s" role raw.Gstin e/role + " GSTIN \x27" + raw.Gstin + "\x27 is invalid: " + e/g' GSTFlow.Rules/Library.fs
+sed -i 's/sprintf "HSN '\''%s'\'' must be exactly 4, 6, or 8 digits" item.Hsn/"HSN \x27" + item.Hsn + "\x27 must be exactly 4, 6, or 8 digits"/g' GSTFlow.Rules/Library.fs
+sed -i 's/sprintf "GST Rate %M is not a valid Indian slab (0, 0.1, 0.25, 1.5, 3, 5, 12, 18, 28)" item.GstRate/"GST Rate " + string item.GstRate + " is not a valid Indian slab (0, 0.1, 0.25, 1.5, 3, 5, 12, 18, 28)"/g' GSTFlow.Rules/Library.fs
+sed -i 's/sprintf "HSN '\''%s'\'' may fall under Reverse Charge, but applicability cannot be safely inferred without supplier and recipient context." item.Hsn/"HSN \x27" + item.Hsn + "\x27 may fall under Reverse Charge, but applicability cannot be safely inferred without supplier and recipient context."/g' GSTFlow.Rules/Library.fs
+sed -i 's/sprintf "Expected IGST approx %M but got %M (failed Sec 170 \/ item math)" expectedTax item.Tax.Igst/"Expected IGST approx " + string expectedTax + " but got " + string item.Tax.Igst + " (failed Sec 170 \/ item math)"/g' GSTFlow.Rules/Library.fs
+sed -i 's/sprintf "Expected CGST\/SGST approx %M but got C:%M S:%M" expectedSplit item.Tax.Cgst item.Tax.Sgst/"Expected CGST\/SGST approx " + string expectedSplit + " but got C:" + string item.Tax.Cgst + " S:" + string item.Tax.Sgst/g' GSTFlow.Rules/Library.fs
+sed -i 's/sprintf "Expected Cess approx %M but got %M" expectedCess cval/"Expected Cess approx " + string expectedCess + " but got " + string cval/g' GSTFlow.Rules/Library.fs
+sed -i 's/sprintf "Invalid DocumentType '\''%s'\''" other/"Invalid DocumentType \x27" + other + "\x27"/g' GSTFlow.Rules/Library.fs
+sed -i 's/sprintf "Buyer State Code '\''%s'\'' is not in the valid vocabulary (01-38, 97, 99)" b.StateCode/"Buyer State Code \x27" + b.StateCode + "\x27 is not in the valid vocabulary (01-38, 97, 99)"/g' GSTFlow.Rules/Library.fs
+sed -i 's/sprintf "Invalid PlaceOfSupply '\''%s'\''" p/"Invalid PlaceOfSupply \x27" + p + "\x27"/g' GSTFlow.Rules/Library.fs

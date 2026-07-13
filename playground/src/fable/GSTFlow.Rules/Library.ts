@@ -161,7 +161,7 @@ function Compiler_validateItem(isInterstate: boolean, isDocumentRcm: boolean, it
     }
     else {
         if (Compiler_isRcmHsn(item.Hsn)) {
-            violations = cons(Compiler_failRule("RCM_LAW")(toText(printf("HSN \'%s\' falls under mandatory Reverse Charge. The invoice must mark ReverseCharge=Y and tax amounts must be 0."))(item.Hsn)), violations);
+            violations = cons(Compiler_unknownRule("RCM_LAW_UNKNOWN")(toText(printf("HSN \'%s\' may fall under Reverse Charge, but applicability cannot be safely inferred without supplier and recipient context."))(item.Hsn)), violations);
         }
         if (isInterstate) {
             if ((compare(item.Tax.Cgst, fromParts(0, 0, 0, false, 0)) > 0) ? true : (compare(item.Tax.Sgst, fromParts(0, 0, 0, false, 0)) > 0)) {
@@ -386,6 +386,7 @@ export function Compiler_compile(raw: RawInvoice, hash: string): CompilationResu
             }
             switch (matchResult_1) {
                 case 0: {
+                    violations = cons(Compiler_unknownRule("PLACE_OF_SUPPLY_ASSUMED")("Place of Supply defaulted to Buyer State, but goods movement termination and service POS branches were not verified."), violations);
                     pos = b_5!.StateCode;
                     break;
                 }
@@ -404,7 +405,7 @@ export function Compiler_compile(raw: RawInvoice, hash: string): CompilationResu
             violations = cons(Compiler_failRule("PLACE_OF_SUPPLY")(toText(printf("Invalid PlaceOfSupply \'%s\'"))(p_2)), violations);
             pos = p_2;
         }
-        const isInterstate: boolean = ((seller.StateCode !== pos) ? true : seller.IsSez) ? true : ((buyer == null) ? false : value(buyer).IsSez);
+        const isInterstate: boolean = (pos !== "UNKNOWN") && (((seller.StateCode !== pos) ? true : seller.IsSez) ? true : ((buyer == null) ? false : value(buyer).IsSez));
         let isDocumentRcm: boolean;
         const matchValue_6: Option<string> = raw.ReverseCharge;
         if (matchValue_6 == null) {

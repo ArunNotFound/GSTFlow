@@ -62,14 +62,14 @@ let main argv =
             let res = Compiler.compile rawInvoice hash
             
             match res.IR with
-            | Some ir ->
+            | Some ir when res.Envelope.OverallOutcome = Pass ->
                 printfn "✅ Invoice %s validates successfully!" ir.SourceInvoice.InvoiceNumber
                 printfn "Supply Type: %A" ir.DerivedSupplyType
                 printfn "Place of Supply: %s" ir.PlaceOfSupply
                 printfn "Interstate: %b" ir.IsInterstate
                 0
-            | None ->
-                printfn "❌ Validation Failed:"
+            | Some _ | None ->
+                printfn "❌ Validation Failed or has Warnings/Unknowns:"
                 for v in res.Envelope.Results do
                     printfn "  [%s] %s" v.Metadata.RuleId v.Metadata.MessageKey
                 1
