@@ -58,7 +58,7 @@ void main() {
           "StateCode": "29"
         },
         "Buyer": {
-          "Gstin": "33GSPTN0802G1ZN",
+          "Gstin": "33GSPTN0802G1ZL",
           "StateCode": "33"
         },
         "Items": [
