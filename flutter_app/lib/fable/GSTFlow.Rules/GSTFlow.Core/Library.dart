@@ -1,12 +1,12 @@
 // ignore_for_file: camel_case_types, constant_identifier_names, non_constant_identifier_names, unnecessary_this
-import './fable_modules/fable_library/Array.dart' as array_2;
-import './fable_modules/fable_library/Char.dart' as char;
-import './fable_modules/fable_library/List.dart' as list;
-import './fable_modules/fable_library/Map.dart' as map;
-import './fable_modules/fable_library/RegExp.dart' as reg_exp;
-import './fable_modules/fable_library/Result.dart' as result;
-import './fable_modules/fable_library/Types.dart' as types;
-import './fable_modules/fable_library/Util.dart' as util;
+import '../fable_modules/fable_library/Array.dart' as array_2;
+import '../fable_modules/fable_library/Char.dart' as char;
+import '../fable_modules/fable_library/List.dart' as list;
+import '../fable_modules/fable_library/Map.dart' as map;
+import '../fable_modules/fable_library/RegExp.dart' as reg_exp;
+import '../fable_modules/fable_library/Result.dart' as result;
+import '../fable_modules/fable_library/Types.dart' as types;
+import '../fable_modules/fable_library/Util.dart' as util;
 
 class Verification_RuleConfidence implements types.Union, Comparable<Verification_RuleConfidence> {
     final int tag;
