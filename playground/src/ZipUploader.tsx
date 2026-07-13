@@ -8,12 +8,17 @@ export default function ZipUploader() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
 
-  const generateCFF = async (content: string) => {
-    // Generate a simple SHA-256 hash for the payload using Web Crypto API
+  const generateHash = async (content: string) => {
     const msgBuffer = new TextEncoder().encode(content);
     const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  };
+
+  const generateCFF = async (content: string) => {
+    // Generate a deterministic payload representation
+    const payloadStr = JSON.stringify(JSON.parse(content));
+    const hashHex = await generateHash(payloadStr);
 
     return JSON.stringify({
       cff_version: "1.0",
@@ -24,6 +29,23 @@ export default function ZipUploader() {
     }, null, 2);
   };
 
+  const verifyCFF = async (cffContent: string) => {
+    try {
+      const parsed = JSON.parse(cffContent);
+      if (!parsed.cff_version || !parsed.canonflow_signature || !parsed.payload) return { valid: false, error: "Invalid CFF structure" };
+      
+      const payloadStr = JSON.stringify(parsed.payload);
+      const expectedHash = `sha256:${await generateHash(payloadStr)}`;
+      
+      if (expectedHash !== parsed.canonflow_signature) {
+        return { valid: false, error: "Cryptographic signature mismatch! Payload was tampered with." };
+      }
+      return { valid: true, payloadStr };
+    } catch (e: any) {
+      return { valid: false, error: "Failed to parse CFF" };
+    }
+  };
+
   const processFile = async (file: File) => {
     setIsProcessing(true);
     setLogs([`Processing ${file.name}...`]);
@@ -32,48 +54,67 @@ export default function ZipUploader() {
       setDownloadUrl(null);
       const outZip = new JSZip();
       let cffCount = 0;
+      let passCount = 0;
+      let failCount = 0;
+      let reportCsv = "FileName,Status,Violations\n";
+
+      const processSingleContent = async (fileName: string, rawContent: string) => {
+        let contentToVerify = rawContent;
+        if (fileName.endsWith('.cff.json')) {
+          const cffRes = await verifyCFF(rawContent);
+          if (!cffRes.valid) {
+            failCount++;
+            reportCsv += `"${fileName}","FAILED","${cffRes.error}"\n`;
+            setLogs(prev => [...prev.slice(-20), `❌ [FAIL] ${fileName}: ${cffRes.error}`]);
+            return;
+          }
+          contentToVerify = cffRes.payloadStr!;
+          setLogs(prev => [...prev.slice(-20), `🔐 [CFF VERIFIED] ${fileName} signature is intact.`]);
+        }
+
+        const res = compileInvoice(contentToVerify);
+        if (res.success) {
+          passCount++;
+          reportCsv += `"${fileName}","PASSED","None"\n`;
+          setLogs(prev => [...prev.slice(-20), `✅ [PASS] ${fileName} -> Generating CFF...`]);
+          const cffContent = await generateCFF(contentToVerify);
+          outZip.file(fileName.replace('.json', '.cff.json'), cffContent);
+          cffCount++;
+        } else {
+          failCount++;
+          const errorEscaped = res.error ? res.error.replace(/"/g, '""') : "Unknown Error";
+          reportCsv += `"${fileName}","FAILED","${errorEscaped}"\n`;
+          setLogs(prev => [...prev.slice(-20), `❌ [FAIL] ${fileName}: ${res.error}`]);
+        }
+      };
 
       if (file.name.endsWith('.zip')) {
         const zip = await JSZip.loadAsync(file);
-        const files = Object.keys(zip.files).filter(f => f.endsWith('.json'));
-        setLogs(prev => [...prev, `Found ${files.length} JSON files in ZIP.`]);
+        const files = Object.keys(zip.files).filter(f => f.endsWith('.json') || f.endsWith('.cff.json'));
+        setLogs(prev => [...prev, `Found ${files.length} JSON/CFF files in ZIP. Processing in batches...`]);
         
-        let passCount = 0;
-        let failCount = 0;
-
-        for (const fileName of files) {
-          const content = await zip.files[fileName].async('string');
-          const res = compileInvoice(content);
-          if (res.success) {
-            passCount++;
-            setLogs(prev => [...prev, `✅ [PASS] ${fileName} -> Generating CFF...`]);
-            const cffContent = await generateCFF(content);
-            outZip.file(fileName.replace('.json', '.cff.json'), cffContent);
-            cffCount++;
-          } else {
-            failCount++;
-            setLogs(prev => [...prev, `❌ [FAIL] ${fileName}: ${res.error}`]);
+        const BATCH_SIZE = 25;
+        for (let i = 0; i < files.length; i += BATCH_SIZE) {
+          const batch = files.slice(i, i + BATCH_SIZE);
+          for (const fileName of batch) {
+            const content = await zip.files[fileName].async('string');
+            await processSingleContent(fileName, content);
           }
+          // Yield to UI thread to keep progress bar and UI smooth
+          await new Promise(r => setTimeout(r, 10));
         }
         
         setLogs(prev => [...prev, `Done. Passed: ${passCount}, Failed: ${failCount}`]);
       } else if (file.name.endsWith('.json')) {
         const text = await file.text();
-        const res = compileInvoice(text);
-        if (res.success) {
-          setLogs(prev => [...prev, `✅ [PASS] ${file.name} -> Generating CFF...`]);
-          const cffContent = await generateCFF(text);
-          outZip.file(file.name.replace('.json', '.cff.json'), cffContent);
-          cffCount++;
-        } else {
-          setLogs(prev => [...prev, `❌ [FAIL] ${file.name}: ${res.error}`]);
-        }
+        await processSingleContent(file.name, text);
       } else {
-        setLogs(prev => [...prev, `❌ Unsupported file type. Please upload a .json or .zip file.`]);
+        setLogs(prev => [...prev, `❌ Unsupported file type. Please upload a .json, .cff.json, or .zip file.`]);
       }
 
-      if (cffCount > 0) {
-        setLogs(prev => [...prev, `📦 Packaging ${cffCount} verified CFF files into a new ZIP...`]);
+      if (cffCount > 0 || failCount > 0) {
+        outZip.file("Verification_Report.csv", reportCsv);
+        setLogs(prev => [...prev, `📦 Packaging ${cffCount} verified CFF files and Verification_Report.csv into a new ZIP...`]);
         const blob = await outZip.generateAsync({ type: 'blob' });
         const url = URL.createObjectURL(blob);
         setDownloadUrl(url);
@@ -115,7 +156,7 @@ export default function ZipUploader() {
         </div>
         <h3 className="text-2xl font-bold text-white mb-2">Drop JSON or ZIP File Here</h3>
         <p className="text-gray-500 max-w-md text-center">
-          Upload a single invoice JSON, or a ZIP archive. Valid invoices will be mathematically verified, converted to cryptographic CFF format, and packaged into a secure ZIP for you to download.
+          Upload raw JSONs, ZIP archives, or existing `.cff.json` files. Valid invoices will be mathematically verified, converted to cryptographic CFF format, and packaged into a secure ZIP along with a CSV Verification Report.
         </p>
       </div>
 
