@@ -1,0 +1,78 @@
+name: Build Flutter Apps (APK & EXE)
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          
+      - name: Install dependencies
+        working-directory: ./flutter_app
+        run: flutter pub get
+        
+      - name: Build APK
+        working-directory: ./flutter_app
+        run: flutter build apk --release
+        
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: GSTFlow-Android-APK
+          path: flutter_app/build/app/outputs/flutter-apk/app-release.apk
+
+  build-windows:
+    name: Build Windows EXE
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup .NET (For NativeAOT)
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+          
+      - name: Build C# NativeAOT DLL
+        working-directory: ./GSTFlow.Native
+        run: dotnet publish GSTFlow.Native.csproj -c Release -r win-x64
+          
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          
+      - name: Enable Windows Desktop
+        run: flutter config --enable-windows-desktop
+          
+      - name: Install dependencies
+        working-directory: ./flutter_app
+        run: flutter pub get
+        
+      - name: Build Windows
+        working-directory: ./flutter_app
+        run: flutter build windows --release
+        
+      - name: Copy Native DLL to build folder
+        run: copy GSTFlow.Native\bin\Release\net10.0\win-x64\publish\GSTFlow.Native.dll flutter_app\build\windows\x64\runner\Release\GSTFlow.Native.dll
+        
+      - name: Upload Windows EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: GSTFlow-Windows-EXE
+          path: flutter_app/build/windows/x64/runner/Release/*
