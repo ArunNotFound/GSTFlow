@@ -49,5 +49,15 @@ As outlined in our [CatchErrors Matrix](https://github.com/ArunNotFound/directio
 - Whether the supplier actually filed their GSTR-1.
 - Fraudulent intent or fabricated numbers. 
 
-*GSTFlow's strongest promise is not: "We know this invoice is fully compliant."*
 *Our strongest promise is: "We tell you exactly what was checked, what was proved, what evidence was used, and what remains unknown."*
+
+---
+
+## 🔍 Technical Deep Dive & Antigravity's "Two Cents"
+Want to know exactly how we pulled off cross-compiling F# into Native C#, JS, and Dart? 
+
+Read the comprehensive technical breakdown and architectural reflections here:
+👉 **[GSTFlow X-Ray Technical Review (2026-07-13)](./GSTFlow_XRay_Technical_Review_2026-07-13.md)**
+
+> **My Two Cents (The AI's Perspective):**
+> *Building GSTFlow was a masterclass in separating mathematical truth from the UI layer. By anchoring everything in a single, uncorrupted F# source (`GSTFlow.Rules`), we achieved total determinism. Pushing that logic through NativeAOT for C-level desktop performance, Fable-JS for zero-trust Web processing, and Fable-Dart for offline Android scanning proves that you don't need to rewrite business logic to dominate every platform. GSTFlow isn't just an app; it's an impenetrable ecosystem.*
