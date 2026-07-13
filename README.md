@@ -20,6 +20,7 @@ Designed for accountants and massive bulk operations where maximum performance i
 By bridging our pure F# engine directly to the Windows OS using C-bindings (`UnmanagedCallersOnly`), we achieve blisteringly fast native performance.
 - **Local AI Extraction (Bootstrapped):** We bundle a lightweight `llama.cpp` server and a tiny `Phi-3` model directly inside the Windows installer. It silently spins up in the background to extract unstructured PDF invoices into rigid JSON—guaranteeing total offline privacy without making the accountant run command-line scripts.
 - **Unrestricted Disk Access:** Directly ingest local ZIPs and output signed CFF packages seamlessly.
+- **The Native Type Triangle:** Our F# Discriminated Unions (`DU`) map 1:1 natively to **Apache Avro (`.cff`)** schemas and **DuckDB Columnar Types (`UNION`, `ENUM`, `STRUCT`)**, preserving 100% domain fidelity without stringly-typed flattening.
 
 ### 3. Mobile Ecosystem: Two-Tier Field Deployment
 **Powered by: 100% Offline Engine Strategy + DuckDB OLAP + Apache Avro**
