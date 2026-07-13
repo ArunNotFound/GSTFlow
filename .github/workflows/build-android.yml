@@ -34,8 +34,22 @@ jobs:
       - name: Compile F# to Dart
         run: |
           dotnet tool restore
-          dotnet fable GSTFlow.Core -o flutter_app/lib/fable/Core --lang dart
-          dotnet fable GSTFlow.Rules -o flutter_app/lib/fable/Rules --lang dart
+          dotnet fable GSTFlow.Dart -o flutter_app/lib/fable_dart --lang dart
+          mkdir -p flutter_app/lib/fable_dart/fable_modules/fable_library
+          cat << 'EOF' > flutter_app/lib/fable_dart/fable_modules/fable_library/Decimal.dart
+          import 'dart:math';
+          double fromParts(int low, int mid, int high, bool isNegative, int scale) {
+            double val = low.toDouble();
+            if (scale > 0) val = val / pow(10, scale);
+            return isNegative ? -val : val;
+          }
+          double op_Addition(double x, double y) => x + y;
+          double op_Multiply(double x, double y) => x * y;
+          double op_Division(double x, double y) => x / y;
+          double op_Modulus(double x, double y) => x % y;
+          double round(double x, int scale) => double.parse(x.toStringAsFixed(scale));
+          double default_(int x) => 0.0;
+          EOF
 
       - name: Build Flutter APK
         working-directory: flutter_app
