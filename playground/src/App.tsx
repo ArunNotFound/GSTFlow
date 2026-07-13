@@ -280,34 +280,49 @@ export default function App() {
   const [selectedSample, setSelectedSample] = useState("Valid B2B Invoice");
   const [lang, setLang] = useState<'en'|'hi'>('en');
   
-  let gstr1 = '';
-  let err = '';
-  let violations: any[] = [];
-  
-  try {
-      const res = compileInvoice(jsonInput, "sha256:browser_playground_no_hash");
-      if (res.success) {
-          gstr1 = res.summary;
-      } else {
-          err = res.error;
-          if (res.envelope) {
-              const envelopeObj = JSON.parse(res.envelope);
-              violations = envelopeObj.Results
-                .filter((r: any) => r.Outcome === "Fail" || r.Outcome === "Unknown")
-                .map((r: any) => {
-                    const t = translations[r.Metadata.RuleId];
-                    const desc = t ? (lang === 'en' ? t.en : t.hi) : r.Metadata.MessageKey;
-                    return {
-                        Rule: r.Metadata.RuleId,
-                        Description: desc,
-                        RawDesc: r.Metadata.MessageKey
-                    };
-                });
-          }
+  const [compileState, setCompileState] = useState({ gstr1: '', err: '', violations: [] as any[] });
+
+  React.useEffect(() => {
+    let active = true;
+    const compute = async () => {
+      try {
+        const msgBuffer = new TextEncoder().encode(jsonInput);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        
+        const res = compileInvoice(jsonInput, "sha256:" + hashHex);
+        if (!active) return;
+        
+        if (res.success) {
+            setCompileState({ gstr1: res.summary, err: '', violations: [] });
+        } else {
+            let parsedViolations = [];
+            if (res.envelope) {
+                const envelopeObj = JSON.parse(res.envelope);
+                parsedViolations = envelopeObj.Results
+                  .filter((r: any) => r.Outcome === "Fail" || r.Outcome === "Unknown")
+                  .map((r: any) => {
+                      const t = translations[r.Metadata.RuleId];
+                      const desc = t ? (lang === 'en' ? t.en : t.hi) : r.Metadata.MessageKey;
+                      return {
+                          Rule: r.Metadata.RuleId,
+                          Description: desc,
+                          RawDesc: r.Metadata.MessageKey
+                      };
+                  });
+            }
+            setCompileState({ gstr1: '', err: res.error, violations: parsedViolations });
+        }
+      } catch (e: any) {
+        if (active) setCompileState({ gstr1: '', err: e.message, violations: [] });
       }
-  } catch (e: any) {
-      err = e.message;
-  }
+    };
+    compute();
+    return () => { active = false; };
+  }, [jsonInput, lang]);
+
+  const { gstr1, err, violations } = compileState;
 
   return (
     <div className="min-h-screen bg-[#121212] text-gray-100 flex flex-col font-sans selection:bg-emerald-500/30">
