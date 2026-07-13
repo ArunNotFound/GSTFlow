@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Editor from '@monaco-editor/react';
 import PdfUploader from './PdfUploader';
+import ZipUploader from './ZipUploader';
 import ConfirmationScreen from './ConfirmationScreen';
 import VerdictScreen from './VerdictScreen';
 // @ts-ignore
@@ -325,7 +326,7 @@ export default function App() {
             <header className="px-4 py-3 border-b border-gray-800 bg-gray-800/50 flex justify-between items-center">
               <div className="flex space-x-2">
                 <button onClick={() => setInputMode('json')} className={`px-4 py-1.5 text-sm font-medium rounded-full transition-all ${inputMode === 'json' ? 'bg-emerald-500 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'}`}>Govt JSON Playground</button>
-                <button onClick={() => setInputMode('pdf')} className={`px-4 py-1.5 text-sm font-medium rounded-full transition-all ${inputMode === 'pdf' ? 'bg-emerald-500 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'}`}>PDF Upload</button>
+                <button onClick={() => setInputMode('pdf')} className={`px-4 py-1.5 text-sm font-medium rounded-full transition-all ${inputMode === 'pdf' ? 'bg-emerald-500 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'}`}>File / ZIP Upload</button>
               </div>
               <button onClick={() => setLang(lang === 'en' ? 'hi' : 'en')} className="text-xs px-3 py-1 bg-gray-800 text-gray-300 rounded border border-gray-700">
                 Language: <span className="font-bold text-white">{lang === 'en' ? 'English' : 'हिंदी'}</span>
@@ -359,17 +360,8 @@ export default function App() {
                     />
                   </>
                 ) : (
-                  <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
-                    <div className="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mb-6">
-                      <svg className="w-10 h-10 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                    </div>
-                    <h3 className="text-2xl font-bold text-gray-300 mb-2">Web PDF Extraction Disabled</h3>
-                    <p className="text-gray-500 max-w-md">
-                      For security and privacy, PDF extraction is only supported in the Desktop App where AI runs locally. We do not upload your sensitive financial PDFs to cloud servers.
-                    </p>
-                    <a href="#pake-download" className="mt-8 px-6 py-2.5 bg-gray-800 border border-gray-700 rounded-full hover:bg-gray-700 text-sm font-semibold transition">
-                      Get Desktop App (Windows)
-                    </a>
+                  <div className="flex-1 overflow-hidden">
+                    <ZipUploader />
                   </div>
                 )}
               </div>
