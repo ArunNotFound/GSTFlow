@@ -1,6 +1,5 @@
 // ignore_for_file: camel_case_types, constant_identifier_names, non_constant_identifier_names, unnecessary_this
 import './fable_modules/fable_library/Array.dart' as array_2;
-import './fable_modules/fable_library/Char.dart' as char;
 import './fable_modules/fable_library/List.dart' as list;
 import './fable_modules/fable_library/Map.dart' as map;
 import './fable_modules/fable_library/RegExp.dart' as reg_exp;
@@ -164,10 +163,13 @@ class Verification_VerdictEnvelope implements types.Record, Comparable<Verificat
 String Hash_computeSha256(String str) => 'hash_not_computed';
 
 int GstinValidation_charToValue(int c) {
-    if (char.isDigit(c)) {
-        return c - 48;
-    } else if (char.isLetter(c)) {
-        return (c.toUpperCase() - 65) + 10;
+    final int ci = c;
+    if ((ci >= 48) && (ci <= 57)) {
+        return ci - 48;
+    } else if ((ci >= 65) && (ci <= 90)) {
+        return (ci - 65) + 10;
+    } else if ((ci >= 97) && (ci <= 122)) {
+        return (ci - 97) + 10;
     } else {
         return throw types.ExceptionBase('Invalid character');
     }
@@ -381,19 +383,19 @@ class Invoice implements types.Record, Comparable<Invoice> {
 }
 
 class GSTCanonicalIR implements types.Record, Comparable<GSTCanonicalIR> {
-    final Invoice Invoice;
+    final Invoice SourceInvoice;
     final SupplyType DerivedSupplyType;
     final String PlaceOfSupply;
     final bool IsInterstate;
-    const GSTCanonicalIR(this.Invoice, this.DerivedSupplyType, this.PlaceOfSupply, this.IsInterstate);
+    const GSTCanonicalIR(this.SourceInvoice, this.DerivedSupplyType, this.PlaceOfSupply, this.IsInterstate);
     @override
-    bool operator ==(Object other) => (other is GSTCanonicalIR) && ((other.Invoice == Invoice) && ((other.DerivedSupplyType == DerivedSupplyType) && ((other.PlaceOfSupply == PlaceOfSupply) && (other.IsInterstate == IsInterstate))));
+    bool operator ==(Object other) => (other is GSTCanonicalIR) && ((other.SourceInvoice == SourceInvoice) && ((other.DerivedSupplyType == DerivedSupplyType) && ((other.PlaceOfSupply == PlaceOfSupply) && (other.IsInterstate == IsInterstate))));
     @override
-    int get hashCode => util.combineHashCodes([Invoice.hashCode, DerivedSupplyType.hashCode, PlaceOfSupply.hashCode, IsInterstate.hashCode]);
+    int get hashCode => util.combineHashCodes([SourceInvoice.hashCode, DerivedSupplyType.hashCode, PlaceOfSupply.hashCode, IsInterstate.hashCode]);
     @override
     int compareTo(GSTCanonicalIR other) {
         late int $r;
-        if (($r = Invoice.compareTo(other.Invoice)) == 0) {
+        if (($r = SourceInvoice.compareTo(other.SourceInvoice)) == 0) {
             if (($r = DerivedSupplyType.compareTo(other.DerivedSupplyType)) == 0) {
                 if (($r = PlaceOfSupply.compareTo(other.PlaceOfSupply)) == 0) {
                     $r = util.compareBool(IsInterstate, other.IsInterstate);

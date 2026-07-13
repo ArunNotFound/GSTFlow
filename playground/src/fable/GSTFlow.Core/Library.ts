@@ -5,7 +5,6 @@ import { Option } from "../fable_modules/fable-library-ts.5.6.0/Option.ts";
 import { Exception, IComparable, IEquatable } from "../fable_modules/fable-library-ts.5.6.0/Util.ts";
 import { FSharpList } from "../fable_modules/fable-library-ts.5.6.0/List.ts";
 import { FSharpMap } from "../fable_modules/fable-library-ts.5.6.0/Map.ts";
-import { isLetter, isDigit } from "../fable_modules/fable-library-ts.5.6.0/Char.ts";
 import { int32 } from "../fable_modules/fable-library-ts.5.6.0/Int32.ts";
 import { mapIndexed, sum as sum_1 } from "../fable_modules/fable-library-ts.5.6.0/Array.ts";
 import { substring } from "../fable_modules/fable-library-ts.5.6.0/String.ts";
@@ -226,11 +225,15 @@ export function Hash_computeSha256(str: string): string {
 }
 
 export function GstinValidation_charToValue(c: string): int32 {
-    if (isDigit(c)) {
-        return (~~c.charCodeAt(0) - ~~"0".charCodeAt(0)) | 0;
+    const ci: int32 = ~~c.charCodeAt(0) | 0;
+    if ((ci >= 48) && (ci <= 57)) {
+        return (ci - 48) | 0;
     }
-    else if (isLetter(c)) {
-        return ((~~c.toLocaleUpperCase().charCodeAt(0) - ~~"A".charCodeAt(0)) + 10) | 0;
+    else if ((ci >= 65) && (ci <= 90)) {
+        return ((ci - 65) + 10) | 0;
+    }
+    else if ((ci >= 97) && (ci <= 122)) {
+        return ((ci - 97) + 10) | 0;
     }
     else {
         throw new Exception("Invalid character");
@@ -469,13 +472,13 @@ export function Invoice_$reflection(): TypeInfo {
 }
 
 export class GSTCanonicalIR extends Record implements IEquatable<GSTCanonicalIR>, IComparable<GSTCanonicalIR> {
-    readonly Invoice: Invoice;
+    readonly SourceInvoice: Invoice;
     readonly DerivedSupplyType: SupplyType_$union;
     readonly PlaceOfSupply: string;
     readonly IsInterstate: boolean;
-    constructor(Invoice: Invoice, DerivedSupplyType: SupplyType_$union, PlaceOfSupply: string, IsInterstate: boolean) {
+    constructor(SourceInvoice: Invoice, DerivedSupplyType: SupplyType_$union, PlaceOfSupply: string, IsInterstate: boolean) {
         super();
-        this.Invoice = Invoice;
+        this.SourceInvoice = SourceInvoice;
         this.DerivedSupplyType = DerivedSupplyType;
         this.PlaceOfSupply = PlaceOfSupply;
         this.IsInterstate = IsInterstate;
@@ -483,6 +486,6 @@ export class GSTCanonicalIR extends Record implements IEquatable<GSTCanonicalIR>
 }
 
 export function GSTCanonicalIR_$reflection(): TypeInfo {
-    return record_type("GSTFlow.Core.GSTCanonicalIR", [], GSTCanonicalIR, () => [["Invoice", Invoice_$reflection()], ["DerivedSupplyType", SupplyType_$reflection()], ["PlaceOfSupply", string_type], ["IsInterstate", bool_type]]);
+    return record_type("GSTFlow.Core.GSTCanonicalIR", [], GSTCanonicalIR, () => [["SourceInvoice", Invoice_$reflection()], ["DerivedSupplyType", SupplyType_$reflection()], ["PlaceOfSupply", string_type], ["IsInterstate", bool_type]]);
 }
 

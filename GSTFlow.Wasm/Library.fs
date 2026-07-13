@@ -18,16 +18,22 @@ let compileInvoice (jsonString: string) : obj =
         let result = Compiler.compile rawInvoice hash
         
         let serializeEnv (env: VerdictEnvelope) = Encode.Auto.toString(0, env, extra = extra)
-        
+        let violations =
+            result.Envelope.Results
+            |> List.filter (fun r -> r.Outcome = RuleOutcome.Fail)
+            |> List.map (fun r -> {| Rule = r.Metadata.RuleId; Description = r.Metadata.MessageKey |})
+            |> Array.ofList
+
         match result.IR with
         | Some ir ->
             let summary = Generators.emitSummaryJson ir
             let proof = Generators.emitValidationReport ir
             {|
-                success = true
+                success = (violations.Length = 0)
                 summary = summary
                 proof = proof
                 envelope = serializeEnv result.Envelope
+                violations = violations
                 error = null
             |} |> box
         | None ->
@@ -36,6 +42,7 @@ let compileInvoice (jsonString: string) : obj =
                 summary = null
                 proof = null
                 envelope = serializeEnv result.Envelope
+                violations = violations
                 error = "Validation failed"
             |} |> box
     | Error err ->
@@ -44,5 +51,6 @@ let compileInvoice (jsonString: string) : obj =
             summary = null
             proof = null
             envelope = null
+            violations = [||]
             error = err
         |} |> box
