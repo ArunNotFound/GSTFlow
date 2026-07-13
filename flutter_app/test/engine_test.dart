@@ -44,7 +44,7 @@ void main() {
       final result = engine.compileInvoice(rawInvoice, hash);
       
       // 4. Verify No Fails
-      final violations = result.Envelope.Results.where((r) => r.Outcome.tag == 1).toList();
+      final violations = result.Envelope.Results.where((r) => r.Outcome.tag != 0).toList();
       expect(violations.isEmpty, true, reason: 'A valid invoice should have 0 violations.');
     });
 
@@ -80,7 +80,7 @@ void main() {
       final hash = sha256.convert(utf8.encode(invalidJson)).toString();
       final result = engine.compileInvoice(rawInvoice, hash);
       
-      final violations = result.Envelope.Results.where((r) => r.Outcome.tag == 1).toList();
+      final violations = result.Envelope.Results.where((r) => r.Outcome.tag != 0).toList();
       expect(violations.isNotEmpty, true);
       expect(violations.any((v) => v.Metadata.RuleId == 'IGST_CGST_LAW'), true);
     });
