@@ -38,9 +38,11 @@ test('has title and can process valid invoice', async ({ page }) => {
     ]
   };
 
-  // Clear and fill the textarea
-  await textarea.fill('');
-  await textarea.fill(JSON.stringify(validInvoice, null, 2));
+  // Clear and fill the editor by clicking and typing
+  await page.locator('.monaco-editor').click();
+  await page.keyboard.press('Control+A');
+  await page.keyboard.press('Backspace');
+  await page.keyboard.type(JSON.stringify(validInvoice, null, 2));
 
   // The output should be successful
   await expect(page.getByText('No issue found in the supported checks')).toBeVisible({ timeout: 5000 });
