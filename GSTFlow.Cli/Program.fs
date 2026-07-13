@@ -57,7 +57,7 @@ let main argv =
             
             match res.IR with
             | Some ir ->
-                printfn "✅ Invoice %s validates successfully!" ir.Invoice.InvoiceNumber
+                printfn "✅ Invoice %s validates successfully!" ir.SourceInvoice.InvoiceNumber
                 printfn "Supply Type: %A" ir.DerivedSupplyType
                 printfn "Place of Supply: %s" ir.PlaceOfSupply
                 printfn "Interstate: %b" ir.IsInterstate
