@@ -23,6 +23,16 @@ jobs:
         with:
           channel: 'stable'
           
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+          
+      - name: Generate Fable Dart Runtime
+        run: |
+          dotnet tool restore
+          dotnet fable GSTFlow.Dart -o flutter_app/lib/fable_dart --lang dart
+          
       - name: Install dependencies
         working-directory: ./flutter_app
         run: flutter pub get
@@ -55,6 +65,11 @@ jobs:
       - name: Build C# NativeAOT DLL
         working-directory: ./GSTFlow.Native
         run: dotnet publish GSTFlow.Native.csproj -c Release -r win-x64
+        
+      - name: Generate Fable Dart Runtime
+        run: |
+          dotnet tool restore
+          dotnet fable GSTFlow.Dart -o flutter_app/lib/fable_dart --lang dart
           
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -91,6 +106,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+          
+      - name: Generate Fable TypeScript Runtime
+        run: |
+          dotnet tool restore
+          dotnet fable GSTFlow.Wasm -o playground/src/fable --lang typescript
           
       - name: Install dependencies
         working-directory: ./playground

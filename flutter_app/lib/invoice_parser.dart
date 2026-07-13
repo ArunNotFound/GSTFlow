@@ -15,8 +15,7 @@ class InvoiceParser {
       f_decimal.Decimal.parse(json['Igst']?.toString() ?? '0'),
       f_decimal.Decimal.parse(json['Cgst']?.toString() ?? '0'),
       f_decimal.Decimal.parse(json['Sgst']?.toString() ?? '0'),
-      json['Cess'] != null ? _opt(f_decimal.Decimal.parse(json['Cess'].toString())) : null,
-      json['StateCess'] != null ? _opt(f_decimal.Decimal.parse(json['StateCess'].toString())) : null,
+      json['Cess'] != null ? _opt(f_decimal.Decimal.parse(json['Cess'].toString())) : null
     );
   }
 
