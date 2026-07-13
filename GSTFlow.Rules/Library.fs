@@ -54,7 +54,7 @@ module Compiler =
     let private unknownRule = createRule Unknown
 
     let validStateCodes = 
-        Set.ofList ([ for i in 1..38 -> sprintf "%02d" i ] @ [ "97"; "99" ])
+        Set.ofList ([ for i in 1..38 -> if i < 10 then "0" + string i else string i ] @ [ "97"; "99" ])
 
     let validRateSlabs = 
         Set.ofList [ 0m; 0.1m; 0.25m; 1.5m; 3m; 5m; 12m; 18m; 28m ]
@@ -66,11 +66,11 @@ module Compiler =
         match GSTIN.create raw.Gstin with
         | Ok g ->
             if raw.Gstin.Substring(0, 2) <> raw.StateCode then
-                Error (failRule "GSTIN_STATE_MATCH" (sprintf "%s StateCode '%s' does not match GSTIN prefix '%s'" role raw.StateCode (raw.Gstin.Substring(0, 2))))
+                Error (failRule "GSTIN_STATE_MATCH" (role + " StateCode '" + raw.StateCode + "' does not match GSTIN prefix '" + raw.Gstin.Substring(0, 2) + "'"))
             else
                 let isSez = match raw.IsSez with Some x -> x | None -> false
                 Ok { Party.Gstin = g; Party.StateCode = raw.StateCode; Party.IsSez = isSez }
-        | Error e -> Error (failRule "GSTIN_FORMAT" (sprintf "%s GSTIN '%s' is invalid: %s" role raw.Gstin e))
+        | Error e -> Error (failRule "GSTIN_FORMAT" (role + " GSTIN '" + raw.Gstin + "' is invalid: " + e))
 
     let private isRcmHsn (hsn: string) =
         // GTA, Legal, Sponsorship, Security, etc.
@@ -81,10 +81,10 @@ module Compiler =
         let mutable violations = []
 
         if not (isValidHsn item.Hsn) then
-            violations <- failRule "HSN_FORMAT" (sprintf "HSN '%s' must be exactly 4, 6, or 8 digits" item.Hsn) :: violations
+            violations <- failRule "HSN_FORMAT" ("HSN '" + item.Hsn + "' must be exactly 4, 6, or 8 digits") :: violations
             
         if not (validRateSlabs.Contains item.GstRate) then
-            violations <- failRule "RATE_SLAB" (sprintf "GST Rate %M is not a valid Indian slab (0, 0.1, 0.25, 1.5, 3, 5, 12, 18, 28)" item.GstRate) :: violations
+            violations <- failRule "RATE_SLAB" ("GST Rate " + string item.GstRate + " is not a valid Indian slab (0, 0.1, 0.25, 1.5, 3, 5, 12, 18, 28)") :: violations
 
         let expectedTax = Math.Round(item.TaxableValue * (item.GstRate / 100m), 2)
         
@@ -93,28 +93,28 @@ module Compiler =
                 violations <- failRule "RCM_TAX_CHARGED" "Invoice is marked for Reverse Charge (RCM). Seller cannot collect tax; tax amounts must be 0." :: violations
         else
             if isRcmHsn item.Hsn then
-                violations <- unknownRule "RCM_LAW_UNKNOWN" (sprintf "HSN '%s' may fall under Reverse Charge, but applicability cannot be safely inferred without supplier and recipient context." item.Hsn) :: violations
+                violations <- unknownRule "RCM_LAW_UNKNOWN" ("HSN '" + item.Hsn + "' may fall under Reverse Charge, but applicability cannot be safely inferred without supplier and recipient context.") :: violations
             
             if isInterstate then
                 if item.Tax.Cgst > 0m || item.Tax.Sgst > 0m then
                     violations <- failRule "IGST_CGST_LAW" "Interstate supply cannot have CGST or SGST" :: violations
                 
                 if Math.Abs(item.Tax.Igst - expectedTax) > 0.5m then
-                    violations <- failRule "TAX_AMOUNT" (sprintf "Expected IGST approx %M but got %M (failed Sec 170 / item math)" expectedTax item.Tax.Igst) :: violations
+                    violations <- failRule "TAX_AMOUNT" ("Expected IGST approx " + string expectedTax + " but got " + string item.Tax.Igst + " (failed Sec 170 / item math)") :: violations
             else
                 if item.Tax.Igst > 0m then
                     violations <- failRule "IGST_CGST_LAW" "Intrastate supply cannot have IGST" :: violations
                 
                 let expectedSplit = Math.Round(expectedTax / 2m, 2)
                 if Math.Abs(item.Tax.Cgst - expectedSplit) > 0.5m || Math.Abs(item.Tax.Sgst - expectedSplit) > 0.5m then
-                    violations <- failRule "TAX_AMOUNT" (sprintf "Expected CGST/SGST approx %M but got C:%M S:%M" expectedSplit item.Tax.Cgst item.Tax.Sgst) :: violations
+                    violations <- failRule "TAX_AMOUNT" ("Expected CGST/SGST approx " + string expectedSplit + " but got C:" + string item.Tax.Cgst + " S:" + string item.Tax.Sgst) :: violations
                 
         match item.CessRate, item.Tax.Cess with
         | Some crate, Some cval ->
             if not isDocumentRcm then
                 let expectedCess = Math.Round(item.TaxableValue * (crate / 100m), 2)
                 if Math.Abs(cval - expectedCess) > 0.5m then
-                    violations <- failRule "CESS_ARITHMETIC" (sprintf "Expected Cess approx %M but got %M" expectedCess cval) :: violations
+                    violations <- failRule "CESS_ARITHMETIC" ("Expected Cess approx " + string expectedCess + " but got " + string cval) :: violations
         | None, Some cval when cval > 0m ->
             if not isDocumentRcm then
                 violations <- failRule "CESS_ARITHMETIC" "Cess amount provided but no CessRate specified" :: violations
@@ -154,7 +154,7 @@ module Compiler =
             | Some "DBN" -> DBN
             | Some "INV" | None -> INV
             | Some other ->
-                violations <- failRule "DOC_TYPE" (sprintf "Invalid DocumentType '%s'" other) :: violations
+                violations <- failRule "DOC_TYPE" ("Invalid DocumentType '" + other + "'") :: violations
                 INV
 
         match docType with
@@ -173,7 +173,7 @@ module Compiler =
             match raw.Buyer with
             | Some b when String.IsNullOrWhiteSpace(b.Gstin) -> 
                 if not (validStateCodes.Contains b.StateCode) then
-                    let err = failRule "STATE_CODE" (sprintf "Buyer State Code '%s' is not in the valid vocabulary (01-38, 97, 99)" b.StateCode)
+                    let err = failRule "STATE_CODE" ("Buyer State Code '" + b.StateCode + "' is not in the valid vocabulary (01-38, 97, 99)")
                     violations <- err :: violations
                     Some (Error err)
                 else
@@ -209,7 +209,7 @@ module Compiler =
                 match raw.PlaceOfSupply with
                 | Some p when validStateCodes.Contains p -> p
                 | Some p -> 
-                    violations <- failRule "PLACE_OF_SUPPLY" (sprintf "Invalid PlaceOfSupply '%s'" p) :: violations
+                    violations <- failRule "PLACE_OF_SUPPLY" ("Invalid PlaceOfSupply '" + p + "'") :: violations
                     p
                 | None ->
                     match buyer with

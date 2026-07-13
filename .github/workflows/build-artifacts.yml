@@ -41,10 +41,12 @@ jobs:
             return isNegative ? -val : val;
           }
           double op_Addition(double x, double y) => x + y;
+          double op_Subtraction(double x, double y) => x - y;
           double op_Multiply(double x, double y) => x * y;
           double op_Division(double x, double y) => x / y;
           double op_Modulus(double x, double y) => x % y;
           double round(double x, int scale) => double.parse(x.toStringAsFixed(scale));
+          double abs(double x) => x.abs();
           double default_(int x) => 0.0;
           EOF
           
@@ -94,10 +96,12 @@ jobs:
             return isNegative ? -val : val;
           }
           double op_Addition(double x, double y) => x + y;
+          double op_Subtraction(double x, double y) => x - y;
           double op_Multiply(double x, double y) => x * y;
           double op_Division(double x, double y) => x / y;
           double op_Modulus(double x, double y) => x % y;
           double round(double x, int scale) => double.parse(x.toStringAsFixed(scale));
+          double abs(double x) => x.abs();
           double default_(int x) => 0.0;
           EOF
           
@@ -112,6 +116,10 @@ jobs:
       - name: Install dependencies
         working-directory: ./flutter_app
         run: flutter pub get
+        
+      - name: Run Matrix Tests
+        working-directory: ./flutter_app
+        run: flutter test test/matrix_test.dart
         
       - name: Build Windows
         working-directory: ./flutter_app
