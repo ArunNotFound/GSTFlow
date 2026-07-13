@@ -42,8 +42,8 @@ class _ScannerPageState extends State<ScannerPage> {
       // 3. Run the pure F# rules engine offline!
       final result = engine.compileInvoice(rawInvoice, hash);
 
-      // 4. Check for violations
-      final violations = result.Envelope.Results.where((r) => r.Outcome.tag == 1).toList(); // tag 1 is Fail
+      // 4. Check for violations (Pass=0, Warning=1, Fail=2, Unknown=3)
+      final violations = result.Envelope.Results.where((r) => r.Outcome.tag != 0).toList();
 
       showDialog(
         context: context,
