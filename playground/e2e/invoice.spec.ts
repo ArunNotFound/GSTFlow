@@ -43,5 +43,5 @@ test('has title and can process valid invoice', async ({ page }) => {
   await textarea.fill(JSON.stringify(validInvoice, null, 2));
 
   // The output should be successful
-  await expect(page.getByText('Ready to File')).toBeVisible({ timeout: 5000 });
+  await expect(page.getByText('No issue found in the supported checks')).toBeVisible({ timeout: 5000 });
 });
