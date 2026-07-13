@@ -118,16 +118,4 @@ jobs:
         echo "Testing Invoice 5 (SaaS)"
         dotnet run --project GSTFlow.Cli/GSTFlow.Cli.fsproj -- --validate fixtures/invoice_5_saas.json || { echo "Expected invoice 5 to pass!"; exit 1; }
 
-    - name: Restore Local Tools (Fable)
-      run: dotnet tool restore
 
-    - name: Compile Wasm (Fable to TS)
-      run: dotnet fable GSTFlow.Wasm -o playground/src/fable --lang typescript
-
-    - name: Install Playground Dependencies
-      working-directory: ./playground
-      run: npm ci || npm install
-
-    - name: Run D0 Agreement Tests (JS vs CLI)
-      working-directory: ./playground
-      run: npx tsx test_fable.ts

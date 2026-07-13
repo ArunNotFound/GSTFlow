@@ -4,5 +4,4 @@
   <Project Path="GSTFlow.Emit/GSTFlow.Emit.fsproj" />
   <Project Path="GSTFlow.Rules/GSTFlow.Rules.fsproj" />
   <Project Path="GSTFlow.Tests/GSTFlow.Tests.fsproj" />
-  <Project Path="GSTFlow.Wasm/GSTFlow.Wasm.fsproj" />
 </Solution>
