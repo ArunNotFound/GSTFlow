@@ -6,8 +6,8 @@ test('has title and can process valid invoice', async ({ page }) => {
   // Expect a title
   await expect(page).toHaveTitle(/GSTFlow/i);
 
-  // Click the Raw JSON button to switch modes
-  await page.getByRole('button', { name: 'Raw JSON' }).click();
+  // Click the Govt JSON Playground button to switch modes
+  await page.getByRole('button', { name: 'Govt JSON Playground' }).click();
 
   // Get the textarea
   const textarea = page.locator('.monaco-editor textarea').first();
