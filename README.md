@@ -22,10 +22,10 @@ By bridging our pure F# engine directly to the Windows OS using C-bindings (`Unm
 - **Unrestricted Disk Access:** Directly ingest local ZIPs and output signed CFF packages seamlessly.
 
 ### 3. Mobile Ecosystem: Two-Tier Field Deployment
-**Powered by: 100% Offline Engine Strategy**
-To eliminate Dart's `double.parse` / IEEE 754 64-bit floating-point precision limitations (which compromise ₹1 statutory tax rounding), we have pivoted our mobile deployment into a two-tier strategy:
-- **3A. GSTFlow Lite (The "Facebook Lite" of Tax Validation):** An ultra-lightweight (<10MB), high-speed app wrapper around our Wasm/JS engine for users on the move. Features zero AI bloat, instant startup, local SQLite historical backup, JSON & ZIP verification, SHA-256 cryptographic stamping (`payload_digest`), and one-tap CFF ZIP export.
-- **3B. GSTFlow Pro ("God Mode" Mobile Auditor):** Full field power tool featuring offline Camera QR / Barcode scanning of printed invoices, on-device vision/OCR receipt ingestion, and full SQLite sync with Windows Desktop.
+**Powered by: 100% Offline Engine Strategy + DuckDB OLAP + Apache Avro**
+To eliminate Dart's `double.parse` / IEEE 754 64-bit floating-point precision limitations, we have pivoted our mobile deployment into a two-tier strategy powered by embedded **DuckDB** analytical storage and **Apache Avro** (`.cff` / `.avro`) data interchange:
+- **3A. GSTFlow Lite (The "Facebook Lite" of Tax Validation):** An ultra-lightweight (<10MB), high-speed app wrapper around our Wasm/JS engine for users on the move. Features zero AI bloat, instant startup, embedded DuckDB ledger, JSON & ZIP verification, SHA-256 cryptographic stamping (`payload_digest`), and one-tap Avro/ZIP export.
+- **3B. GSTFlow Pro (Field Inspector & QR Scanner):** Focused physical invoice verification tool featuring offline Camera QR scanning of printed B2B/B2C e-Invoices. *Deliberately trimmed of heavy on-device LLMs/PDF OCR* (preventing battery drain and 2GB+ APK bloat—leaving unstructured PDF AI extraction exclusively to Desktop). Field data is packaged into compact Apache Avro `.cff` bundles for instant air-gapped transfer via **USB OTG** thumb drives or **Android QuickShare** to the CA's Desktop.
 
 ## CI/CD Pipeline & Automated Artifacts
 The repository is fully automated via GitHub Actions:
