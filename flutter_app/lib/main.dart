@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'fable/GSTFlow.Core/Library.dart' as core;
-import 'fable/fable_modules/fable_library/Result.dart' as fable_result;
+import 'fable/Core/Library.dart' as core;
+import 'fable/Core/fable_modules/fable_library/Result.dart' as fable_result;
 
 void main() {
   runApp(const GSTFlowApp());

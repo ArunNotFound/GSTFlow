@@ -272,7 +272,7 @@ module Compiler =
                 { IR = None; Envelope = envelope }
             else
                 let ir = {
-                    Invoice = {
+                    SourceInvoice = {
                         DocumentType = docType
                         InvoiceNumber = raw.InvoiceNumber
                         InvoiceDate = raw.InvoiceDate

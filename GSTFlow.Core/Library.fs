@@ -54,8 +54,10 @@ module Hash =
 
 module GstinValidation =
     let charToValue (c: char) =
-        if Char.IsDigit(c) then int c - int '0'
-        elif Char.IsLetter(c) then int (Char.ToUpper(c)) - int 'A' + 10
+        let ci = int c
+        if ci >= 48 && ci <= 57 then ci - 48
+        elif ci >= 65 && ci <= 90 then ci - 65 + 10
+        elif ci >= 97 && ci <= 122 then ci - 97 + 10
         else failwith "Invalid character"
 
     let valueToChar (v: int) =
@@ -149,7 +151,7 @@ type Invoice = {
 }
 
 type GSTCanonicalIR = {
-    Invoice: Invoice
+    SourceInvoice: Invoice
     DerivedSupplyType: SupplyType
     PlaceOfSupply: StateCode
     IsInterstate: bool
