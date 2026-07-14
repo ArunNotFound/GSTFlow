@@ -4,28 +4,44 @@ open GSTFlow.Core.Verification
 
 open System
 open System.IO
-open Argu
 open Thoth.Json.Net
 open GSTFlow.Core
 open GSTFlow.Rules
 open GSTFlow.Emit
 
-type CliArguments =
+type CliCommand =
     | Validate of path:string
     | Validate_Batch of dir:string
     | Emit_Summary of path:string
     | Emit_Envelope of path:string
     | Prove of path:string
     | Showcase
-    interface IArgParserTemplate with
-        member s.Usage =
-            match s with
-            | Validate _ -> "Validate an invoice JSON file against GST rules."
-            | Validate_Batch _ -> "Batch validate a directory of invoice JSON files, detecting duplicates and emitting exceptions.csv."
-            | Emit_Summary _ -> "Emit the Summary JSON payload for the given invoice JSON file."
-            | Emit_Envelope _ -> "Emit the Canonical VerdictEnvelope JSON for the given invoice JSON file."
-            | Prove _ -> "Emit the VALIDATION_REPORT.md for the given invoice JSON file."
-            | Showcase -> "Run the interactive ADIMURAI Executive UI Showcase across all 4 tabs and 6 scenarios."
+    | Help
+    | Invalid of string
+
+let parseArgs (argv: string[]) =
+    match argv |> List.ofArray with
+    | ["--validate"; path] -> Validate path
+    | ["--validate-batch"; dir] -> Validate_Batch dir
+    | ["--emit-summary"; path] -> Emit_Summary path
+    | ["--emit-envelope"; path] -> Emit_Envelope path
+    | ["--prove"; path] -> Prove path
+    | ["--showcase"] -> Showcase
+    | ["--help"] | ["-h"] -> Help
+    | [] -> Help
+    | _ -> Invalid "Unknown or incomplete arguments."
+
+let printUsage() =
+    printfn "USAGE: gstflow [options]"
+    printfn ""
+    printfn "OPTIONS:"
+    printfn "  --showcase                 Run the interactive ADIMURAI Executive UI Showcase"
+    printfn "  --validate <path>          Validate an invoice JSON file against GST rules"
+    printfn "  --validate-batch <dir>     Batch validate a directory of invoice JSON files"
+    printfn "  --emit-summary <path>      Emit the Summary JSON payload for the given invoice"
+    printfn "  --emit-envelope <path>     Emit the Canonical VerdictEnvelope JSON"
+    printfn "  --prove <path>             Emit the VALIDATION_REPORT.md"
+    printfn "  --help, -h                 Show this help message"
 
 let tryReadInvoice path =
     try
@@ -53,13 +69,11 @@ let readInvoice path =
 
 [<EntryPoint>]
 let main argv =
-    let parser = ArgumentParser.Create<CliArguments>(programName = "gstflow")
+    let command = parseArgs argv
     
     try
-        let results = parser.ParseCommandLine(inputs = argv, raiseOnUsage = true)
-        
-        if results.Contains(Validate) then
-            let path = results.GetResult(Validate)
+        match command with
+        | Validate path ->
             let (rawInvoice, hash) = readInvoice path
             let res = Compiler.compile rawInvoice hash
             
@@ -76,8 +90,7 @@ let main argv =
                     printfn "  [%s] %s" v.Metadata.RuleId v.Metadata.MessageKey
                 1
 
-        elif results.Contains(Validate_Batch) then
-            let dir = results.GetResult(Validate_Batch)
+        | Validate_Batch dir ->
             if not (Directory.Exists dir) then
                 printfn "Error: Directory not found at %s" dir
                 1
@@ -120,8 +133,7 @@ let main argv =
                     printfn "❌ Batch validation failed with %d exceptions. See %s" exceptions.Length csvPath
                     1
 
-        elif results.Contains(Emit_Summary) then
-            let path = results.GetResult(Emit_Summary)
+        | Emit_Summary path ->
             let (rawInvoice, hash) = readInvoice path
             let res = Compiler.compile rawInvoice hash
             
@@ -136,16 +148,14 @@ let main argv =
                     printfn "  [%s] %s" v.Metadata.RuleId v.Metadata.MessageKey
                 1
 
-        elif results.Contains(Emit_Envelope) then
-            let path = results.GetResult(Emit_Envelope)
+        | Emit_Envelope path ->
             let (rawInvoice, hash) = readInvoice path
             let res = Compiler.compile rawInvoice hash
             let envelopeJson = System.Text.Json.JsonSerializer.Serialize(res.Envelope)
             printfn "%s" envelopeJson
             if res.Envelope.OverallOutcome = Fail then 1 else 0
 
-        elif results.Contains(Prove) then
-            let path = results.GetResult(Prove)
+        | Prove path ->
             let (rawInvoice, hash) = readInvoice path
             let res = Compiler.compile rawInvoice hash
             
@@ -159,7 +169,7 @@ let main argv =
                 for v in res.Envelope.Results do
                     printfn "  [%s] %s" v.Metadata.RuleId v.Metadata.MessageKey
                 1
-        elif results.Contains(Showcase) then
+        | Showcase ->
             printfn "=========================================================================="
             printfn "       OPERATION ADIMURAI • GSTFLOW EXECUTIVE UI SHOWCASE SIMULATOR      "
             printfn "==========================================================================\n"
@@ -224,7 +234,13 @@ let main argv =
             printfn "                  ALL 4 TABS & 6 SCENARIOS VERIFIED OK                   "
             printfn "=========================================================================="
             0
-        else
+        | Help ->
+            printUsage()
+            0
+            
+        | Invalid msg ->
+            printfn "Error: %s\n" msg
+            printUsage()
             1
             
     with e ->
