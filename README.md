@@ -27,10 +27,10 @@ To eliminate Dart's `double.parse` / IEEE 754 64-bit floating-point precision li
 - **3A. GSTFlow Lite (The "Facebook Lite" of Tax Validation):** An ultra-lightweight (<10MB), high-speed app wrapper around our Wasm/JS engine for users on the move. Features zero AI bloat, instant startup, embedded DuckDB ledger, JSON & ZIP verification, SHA-256 cryptographic stamping (`payload_digest`), and one-tap Avro/ZIP export.
 - **3B. GSTFlow Pro (Avalonia .NET 10 • Gemma Edge 2B & QR Inspector):** Comprehensive field verification power tool built on **Avalonia UI (.NET 10 / F#) Mobile**. Because Pro runs natively on `.NET 10` on Android/iOS, it evaluates `GSTFlow.Rules` with **uncompromised 128-bit `System.Decimal` exact math**—completely eliminating Dart `double.parse` float risk. Features offline Camera QR scanning of printed B2B/B2C e-Invoices and on-device **Gemma Edge 2B** AI (via MediaPipe / Android AICore NPU) for 100% offline receipt parsing. Field data is stored in embedded DuckDB and packaged into compact Apache Avro `.cff` bundles for instant air-gapped transfer via **USB OTG** thumb drives or **Android QuickShare** to the CA's Desktop.
 
-## CI/CD Pipeline & Automated Artifacts
+## CI/CD Pipeline & Automated Artifacts (Operation ADIMURAI)
 The repository is fully automated via GitHub Actions:
-- **Test-Driven:** On every push, GitHub automatically runs Flutter widget tests (`flutter test`) and Web E2E tests (`npx playwright test`).
-- **Downloadable Artifacts:** The CI pipeline automatically builds the Android `.apk` and the Windows `.exe` (injecting the NativeAOT `.dll`) and uploads them as GitHub release artifacts for instant downloading and testing (Currently in Alpha).
+- **Test-Driven:** On every push, GitHub automatically runs F# Kernel unit tests (`dotnet test`), builds the unified Avalonia UI (.NET 10) Desktop/Mobile Pro engine (`GSTFlow.UI`), and executes Web E2E tests (`npx playwright test`).
+- **Downloadable Artifacts:** The CI pipeline automatically builds the pure `.NET 10` native desktop and mobile binaries and uploads them as GitHub release artifacts for instant offline deployment.
 
 ---
 
@@ -51,6 +51,23 @@ As outlined in our [CatchErrors Matrix](https://github.com/ArunNotFound/directio
 
 > **No issue found in the supported checks**
 > This is a preflight result, not filing approval or tax advice. We tell you exactly what was checked, what was proved, what evidence was used, and what remains unknown.
+
+---
+
+## 🏛️ Architectural Genesis: The First 3 Thoughts & First 4 Pillars
+
+When undertaking the CanonFlow Format (`.cff`) and GSTFlow, our architecture was built upon three foundational thoughts and four concrete pillars:
+
+### The First 3 Thoughts (Fundamental Design Principles)
+1. **Statutory Truth Must Be Provable — Never Probabilistic:** AI neural networks should assist with unstructured data extraction (PDF OCR / Text-to-SQL), but statutory compliance checks must be executed by a 100% deterministic, mathematically exact functional rules engine.
+2. **64-Bit Floating-Point Math is a Ticking Time Bomb:** Standard IEEE 754 floats (`double.parse`) introduce binary rounding drift. We standardized every calculation on **128-bit exact decimal arithmetic (`System.Decimal` / Avro `logicalType: decimal(28,4)` / DuckDB `DECIMAL(28,4)`)**.
+3. **Data Sovereignty Means 100% Air-Gapped & Offline-First:** Financial and corporate data belongs strictly on the user's hardware. Zero server uploads, zero network leaks.
+
+### The First 4 Pillars Built
+1. **Pure F# Functional Rules Kernel (`GSTFlow.Rules`):** Modeling statutory law using Discriminated Unions (`SupplyType = B2B | B2C`, `RuleOutcome = Pass | Warning | Fail | Unknown`).
+2. **Canonical `.cff` Container Standard:** Tamper-evident ZIP archive bundling `manifest.json` (SHA-256 seal), `invoices.avro`, `verdicts.avro`, and original scanned attachments.
+3. **The Native Type Triangle (`F# DU ↔ Apache Avro .cff ↔ DuckDB Columnar OLAP`):** Zero-copy ingestion preserving tagged unions and exact decimals without flattening.
+4. **The "Offline Trinity" Execution Strategy:** Wasm Web Gateway, Dual-Mode Desktop Heavy-Lifter (NativeAOT + DuckDB + `llama.cpp`), and Two-Tier Mobile (Lite Wasm wrapper vs. Avalonia UI Pro with 128-bit Decimal precision + Gemma Edge 2B).
 
 ---
 
