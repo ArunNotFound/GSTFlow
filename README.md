@@ -14,18 +14,18 @@ The public source of truth. Drop a single JSON invoice or a massive ZIP archive 
 - **SOTA Aesthetics:** Premium dark mode, glassmorphism, and intuitive drag-and-drop.
 - **Automated Testing:** Backed by robust Playwright End-to-End headless browser testing in CI.
 
-### 2. Windows Desktop Heavy-Lifter (Dual-Mode GUI / TUI "Nuclear Option")
-**Powered by: .NET 10 NativeAOT + Avalonia UI + DuckDB OLAP**
-Designed for Chartered Accountants, CFOs, and massive bulk operations where maximum performance is non-negotiable. Supports dual execution modes:
-- **GUI Mode (Avalonia UI):** Rich, glassmorphic visual inspection, interactive CFO auditing, and single-click CFF packaging across Windows, Linux, and macOS.
-- **TUI Mode (Terminal "Nuclear Option"):** High-throughput interactive ASCII terminal dashboard (`Spectre.Console`) streaming bulk audits at 10,000+ invoices/sec. Pairs our bundled **`llama.cpp` local LLM** as an interactive terminal copilot that translates natural-language forensic tax queries into optimized **DuckDB SQL** executed over local `.cff` Avro ledgers—guaranteeing 100% air-gapped privacy.
-- **The Native Type Triangle:** Our F# Discriminated Unions (`DU`) map 1:1 natively to **Apache Avro (`.cff`)** schemas and **DuckDB Columnar Types (`UNION`, `ENUM`, `STRUCT`)**, preserving 100% domain fidelity without stringly-typed flattening.
+### 2. Windows Desktop Heavy-Lifter (Experimental Dual-Mode)
+**Powered by: .NET 10 NativeAOT + Avalonia UI**
+Designed for Chartered Accountants and CFOs. Supports dual execution modes:
+- **GUI Mode (Avalonia UI Prototype):** Rich visual inspection and draft CFF packaging across Windows, Linux, and macOS.
+- **TUI Mode (Terminal Alpha):** High-throughput interactive ASCII terminal dashboard (`Spectre.Console`). Includes **DuckDB-oriented SQL examples** and an **Experimental local inference adapter** for natural-language queries (not yet integrated).
+- **The Native Type Triangle:** Our F# Discriminated Unions map natively to **planned columnar storage research (Apache Avro / DuckDB)**.
 
-### 3. Mobile Ecosystem: Two-Tier Field Deployment
-**Powered by: 100% Offline Engine Strategy + DuckDB OLAP + Apache Avro**
-To eliminate Dart's `double.parse` / IEEE 754 64-bit floating-point precision limitations, we have pivoted our mobile deployment into a two-tier strategy powered by embedded **DuckDB** analytical storage and **Apache Avro** (`.cff` / `.avro`) data interchange:
-- **3A. GSTFlow Lite (The "Facebook Lite" of Tax Validation):** An ultra-lightweight (<10MB), high-speed app wrapper around our Wasm/JS engine for users on the move. Features zero AI bloat, instant startup, embedded DuckDB ledger, JSON & ZIP verification, SHA-256 cryptographic stamping (`payload_digest`), and one-tap Avro/ZIP export.
-- **3B. GSTFlow Pro (Avalonia .NET 10 • Gemma Edge 2B & QR Inspector):** Comprehensive field verification power tool built on **Avalonia UI (.NET 10 / F#) Mobile**. Because Pro runs natively on `.NET 10` on Android/iOS, it evaluates `GSTFlow.Rules` with **uncompromised 128-bit `System.Decimal` exact math**—completely eliminating Dart `double.parse` float risk. Features offline Camera QR scanning of printed B2B/B2C e-Invoices and on-device **Gemma Edge 2B** AI (via MediaPipe / Android AICore NPU) for 100% offline receipt parsing. Field data is stored in embedded DuckDB and packaged into compact Apache Avro `.cff` bundles for instant air-gapped transfer via **USB OTG** thumb drives or **Android QuickShare** to the CA's Desktop.
+### 3. Mobile Ecosystem: Web wrapper (Roadmap)
+**Powered by: 100% Offline Engine Strategy**
+To deploy on mobile without rewriting rules, we are testing:
+- **3A. GSTFlow Lite (Wasm/JS Alpha):** An ultra-lightweight app wrapper around our Wasm/JS engine. Features offline JSON validation and prototype payload digests.
+- **3B. GSTFlow Pro (Avalonia .NET 10 - Roadmap):** Comprehensive field verification tool built on Avalonia UI Mobile. Will feature UI mocks for QR scanning (verification not implemented) and experimental edge AI.
 
 ## CI/CD Pipeline & Automated Artifacts (Operation ADIMURAI)
 The repository is fully automated via GitHub Actions:
@@ -64,10 +64,10 @@ When undertaking the CanonFlow Format (`.cff`) and GSTFlow, our architecture was
 3. **Data Sovereignty Means 100% Air-Gapped & Offline-First:** Financial and corporate data belongs strictly on the user's hardware. Zero server uploads, zero network leaks.
 
 ### The First 4 Pillars Built
-1. **Pure F# Functional Rules Kernel (`GSTFlow.Rules`):** Modeling statutory law using Discriminated Unions (`SupplyType = B2B | B2C`, `RuleOutcome = Pass | Warning | Fail | Unknown`).
-2. **Canonical `.cff` Container Standard:** Tamper-evident ZIP archive bundling `manifest.json` (SHA-256 seal), `invoices.avro`, `verdicts.avro`, and original scanned attachments.
-3. **The Native Type Triangle (`F# DU ↔ Apache Avro .cff ↔ DuckDB Columnar OLAP`):** Zero-copy ingestion preserving tagged unions and exact decimals without flattening.
-4. **The "Offline Trinity" Execution Strategy:** Wasm Web Gateway, Dual-Mode Desktop Heavy-Lifter (NativeAOT + DuckDB + `llama.cpp`), and Two-Tier Mobile (Lite Wasm wrapper vs. Avalonia UI Pro with 128-bit Decimal precision + Gemma Edge 2B).
+1. **Deterministic Prototype Rules Kernel (`GSTFlow.Rules`):** Modeling statutory law using Discriminated Unions (`SupplyType = B2B | B2C`, `RuleOutcome = Pass | Warning | Fail | Unknown`).
+2. **Draft Manifest Experiment (`.cff`):** Conceptual tampered-evident bundle format.
+3. **Planned Columnar Storage Research:** Designing schemas for zero-copy ingestion preserving tagged unions and exact decimals.
+4. **The "Offline Trinity" Execution Strategy:** Wasm Web Gateway, Desktop Avalonia prototype, and Mobile web wrappers.
 
 ---
 
