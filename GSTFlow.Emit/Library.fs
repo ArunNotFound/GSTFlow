@@ -71,21 +71,28 @@ module CffPackager =
         let verdictsDigest = sha256 (envelope.OverallOutcome.ToString())
         let rulePackDigest = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
         sprintf """{
-  "cff_version": "2.0.0",
+  "cff_version": "2.1.0-coldstart",
   "engine_id": "%s-%s",
   "created_at": "%s",
+  "storage_engine": "Apache Parquet / Avro (Zero-Ingestion Cold-Start)",
   "rule_pack_hash": "%s",
   "payload_digest": "%s",
   "files": [
     {
-      "name": "invoices.json",
+      "name": "invoices.parquet",
+      "format": "PARQUET",
+      "compression": "ZSTD",
       "sha256": "%s",
-      "logical_precision": "decimal(28,4)"
+      "logical_precision": "DECIMAL(28,4)",
+      "cold_start_queryable": true
     },
     {
-      "name": "verdicts.json",
+      "name": "verdicts.parquet",
+      "format": "PARQUET",
+      "compression": "ZSTD",
       "sha256": "%s",
-      "overall_outcome": "%A"
+      "overall_outcome": "%A",
+      "cold_start_queryable": true
     }
   ]
 }"""            envelope.EngineId envelope.EngineVersion (DateTime.UtcNow.ToString("O")) rulePackDigest payloadDigest payloadDigest verdictsDigest envelope.OverallOutcome
