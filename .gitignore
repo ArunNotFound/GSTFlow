@@ -26,3 +26,4 @@ obj/
 *.log
 out/
 .idea/
+mock_10k_invoices/

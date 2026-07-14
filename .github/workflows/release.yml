@@ -14,49 +14,12 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  build-desktop:
-    name: Build Windows EXE
+  build-dotnet:
+    name: Build .NET Windows Artifacts
     runs-on: windows-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-
-      - name: Enable Desktop Support
-        run: flutter config --enable-windows-desktop
-
-      - name: Build Flutter Windows
-        working-directory: flutter_app
-        run: |
-          flutter pub get
-          flutter build windows --release
-
-      - name: Package Windows Release
-        working-directory: flutter_app/build/windows/x64/runner/Release
-        run: Compress-Archive -Path * -DestinationPath ../../../../../GSTFlow-Windows.zip
-        
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: GSTFlow-Windows
-          path: GSTFlow-Windows.zip
-
-  build-android:
-    name: Build Android APK
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '17'
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -64,46 +27,49 @@ jobs:
           dotnet-version: '10.0.x'
           dotnet-quality: 'preview'
 
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
+      - name: Build GSTFlow CLI (win-x64)
+        run: dotnet publish GSTFlow.Cli/GSTFlow.Cli.fsproj -c Release -r win-x64 --self-contained true -o ./publish/cli
 
-      - name: Compile F# to Dart
-        run: |
-          dotnet tool restore
-          dotnet fable GSTFlow.Core -o flutter_app/lib/fable/Core --lang dart
-          dotnet fable GSTFlow.Rules -o flutter_app/lib/fable/Rules --lang dart
+      - name: Build GSTFlow UI (win-x64)
+        run: dotnet publish GSTFlow.UI/GSTFlow.UI.fsproj -c Release -r win-x64 --self-contained true -o ./publish/ui
 
-      - name: Build Flutter APK
-        working-directory: flutter_app
-        run: |
-          flutter pub get
-          flutter build apk --release
+      - name: Package CLI
+        working-directory: ./publish/cli
+        run: Compress-Archive -Path * -DestinationPath ../../GSTFlow-CLI-win-x64.zip
+        
+      - name: Package UI
+        working-directory: ./publish/ui
+        run: Compress-Archive -Path * -DestinationPath ../../GSTFlow-UI-win-x64.zip
 
-      - name: Upload APK Artifact
+      - name: Upload CLI Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: GSTFlow-Android
-          path: flutter_app/build/app/outputs/flutter-apk/app-release.apk
+          name: GSTFlow-CLI-win-x64
+          path: GSTFlow-CLI-win-x64.zip
+
+      - name: Upload UI Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GSTFlow-UI-win-x64
+          path: GSTFlow-UI-win-x64.zip
 
   publish:
     name: Publish Release
-    needs: [build-desktop, build-android]
+    needs: [build-dotnet]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - name: Download EXE Artifact
+      - name: Download CLI Artifact
         uses: actions/download-artifact@v4
         with:
-          name: GSTFlow-Windows
+          name: GSTFlow-CLI-win-x64
           path: artifacts/
 
-      - name: Download APK Artifact
+      - name: Download UI Artifact
         uses: actions/download-artifact@v4
         with:
-          name: GSTFlow-Android
+          name: GSTFlow-UI-win-x64
           path: artifacts/
 
       - name: Extract Tag Name
@@ -121,8 +87,6 @@ jobs:
           tag_name: ${{ env.tag_name }}
           name: Release ${{ env.tag_name }}
           files: |
-            artifacts/*.exe
-            artifacts/*.apk
             artifacts/*.zip
           draft: false
           prerelease: false
