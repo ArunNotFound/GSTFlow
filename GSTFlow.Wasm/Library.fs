@@ -61,7 +61,6 @@ let routeNaturalLanguageSql (prompt: string) : obj =
         emittedSql = res.EmittedSql
         executionEngine = res.ExecutionEngine
         gbnfGrammarApplied = res.GbnfGrammarApplied
-        estimatedLatencyMs = res.EstimatedLatencyMs
         explanation = res.Explanation
     |} |> box
 
