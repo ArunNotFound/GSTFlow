@@ -58,13 +58,22 @@ export default function ZipUploader() {
       let failCount = 0;
       let reportCsv = "FileName,Status,Violations\n";
 
+      const escapeCsv = (val: string | undefined | null) => {
+        if (!val) return '""';
+        let escaped = val.replace(/"/g, '""');
+        if (/^[=+\-@]/.test(escaped)) {
+          escaped = "'" + escaped;
+        }
+        return `"${escaped}"`;
+      };
+
       const processSingleContent = async (fileName: string, rawContent: string) => {
         let contentToVerify = rawContent;
         if (fileName.endsWith('.cff.json')) {
           const cffRes = await verifyCFF(rawContent);
           if (!cffRes.valid) {
             failCount++;
-            reportCsv += `"${fileName}","FAILED","${cffRes.error}"\n`;
+            reportCsv += `${escapeCsv(fileName)},"FAILED",${escapeCsv(cffRes.error)}\n`;
             setLogs(prev => [...prev.slice(-20), `❌ [FAIL] ${fileName}: ${cffRes.error}`]);
             return;
           }
@@ -76,15 +85,14 @@ export default function ZipUploader() {
         const res = compileInvoice(contentToVerify, `sha256:${hashHex}`);
         if (res.success) {
           passCount++;
-          reportCsv += `"${fileName}","PASSED","None"\n`;
+          reportCsv += `${escapeCsv(fileName)},"PASSED","None"\n`;
           setLogs(prev => [...prev.slice(-20), `✅ [PASS] ${fileName} -> Generating CFF...`]);
           const cffContent = await generateCFF(contentToVerify);
           outZip.file(fileName.replace('.json', '.cff.json'), cffContent);
           cffCount++;
         } else {
           failCount++;
-          const errorEscaped = res.error ? res.error.replace(/"/g, '""') : "Unknown Error";
-          reportCsv += `"${fileName}","FAILED","${errorEscaped}"\n`;
+          reportCsv += `${escapeCsv(fileName)},"FAILED",${escapeCsv(res.error)}\n`;
           setLogs(prev => [...prev.slice(-20), `❌ [FAIL] ${fileName}: ${res.error}`]);
         }
       };

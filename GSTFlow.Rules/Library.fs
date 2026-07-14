@@ -136,6 +136,13 @@ module Compiler =
         
         if String.IsNullOrWhiteSpace(raw.InvoiceDate) then
             violations <- failRule "INV_SANITY_DATE" "InvoiceDate cannot be empty" :: violations
+        else
+            match System.DateTime.TryParseExact(raw.InvoiceDate, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None) with
+            | (true, parsedDate) -> 
+                if parsedDate.Year < 2017 then
+                    violations <- failRule "INV_SANITY_DATE" "InvoiceDate cannot be before GST implementation (2017)" :: violations
+            | (false, _) ->
+                violations <- failRule "INV_SANITY_DATE" "InvoiceDate must be in yyyy-MM-dd format" :: violations
             
         if raw.Items.IsEmpty then
             violations <- failRule "INV_SANITY_ITEMS" "Invoice must contain at least one item" :: violations

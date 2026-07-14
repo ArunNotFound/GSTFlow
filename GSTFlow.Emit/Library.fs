@@ -11,13 +11,16 @@ module Generators =
         let supplyTypeStr = match ir.DerivedSupplyType with B2B -> "B2B" | B2C -> "B2C"
         let taxType = if ir.IsInterstate then "IGST" else "CGST_SGST"
         
-        $"""{{
-  "invoiceNumber": "{ir.SourceInvoice.InvoiceNumber}",
-  "type": "{supplyTypeStr}",
-  "placeOfSupply": "{ir.PlaceOfSupply}",
-  "taxClassification": "{taxType}",
-  "itemsCount": {ir.SourceInvoice.Items.Length}
-}}"""
+        let payload =
+            {|
+                invoiceNumber = ir.SourceInvoice.InvoiceNumber
+                ``type`` = supplyTypeStr
+                placeOfSupply = ir.PlaceOfSupply
+                taxClassification = taxType
+                itemsCount = ir.SourceInvoice.Items.Length
+            |}
+        let options = System.Text.Json.JsonSerializerOptions(WriteIndented = true)
+        System.Text.Json.JsonSerializer.Serialize(payload, options)
 
     let emitValidationReport (ir: GSTCanonicalIR) =
         let expectedTax = if ir.IsInterstate then "IGST" else "CGST+SGST"
