@@ -7,6 +7,7 @@
 
   <ItemGroup>
 
+    <Compile Include="NativeColumnar.fs" />
     <Compile Include="Library.fs" />
   </ItemGroup>
 
