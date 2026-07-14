@@ -21,3 +21,8 @@ flutter_app/.dart_tool/
 flutter_app/.pub-cache/
 flutter_app/.pub/
 flutter_app/pubspec.lock
+bin/
+obj/
+*.log
+out/
+.idea/
