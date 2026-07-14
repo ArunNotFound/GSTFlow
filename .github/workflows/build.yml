@@ -1,0 +1,72 @@
+name: Operation ADIMURAI Trinity Release
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-core:
+    name: Build & Test Engine (Ubuntu)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build Core
+        run: dotnet build GSTFlow.slnx
+      - name: Run Tests
+        run: dotnet test GSTFlow.slnx
+
+  build-avalonia:
+    name: Build CFF Studio (Avalonia Desktop)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Publish Avalonia App (Windows Self-Contained)
+        run: dotnet publish GSTFlow.UI/GSTFlow.UI.fsproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o out/windows
+      - name: Upload Windows UI Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GSTFlow-CFF-Studio-Windows
+          path: out/windows/GSTFlow.UI.exe
+
+  build-native-aot:
+    name: Build Native AOT Engine (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
+      - name: Publish Native AOT Linux
+        run: dotnet publish GSTFlow.Cli/GSTFlow.Cli.fsproj -c Release -r linux-x64 -o out/linux-aot
+      - name: Upload Linux AOT Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GSTFlow-NativeAOT-Linux
+          path: out/linux-aot/GSTFlow.Cli
+
+  build-wasm:
+    name: Build WebAssembly Sandbox (Fable)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Install Fable
+        run: dotnet tool install -g fable
+      - name: Compile to JavaScript
+        run: fable GSTFlow.Wasm/GSTFlow.Wasm.fsproj -o docs/js
