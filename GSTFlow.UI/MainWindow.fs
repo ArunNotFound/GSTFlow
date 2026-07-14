@@ -167,10 +167,31 @@ type MainWindow() as this =
             CornerRadius = CornerRadius(8.0)
         )
 
+        let btnSez = Button(
+            Content = "[Scenario 5] SEZ Zero-Rated Supply (Sec 7(5)(b))",
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            Padding = Thickness(14.0, 10.0),
+            Background = SolidColorBrush(Color.Parse("#059669")),
+            Foreground = SolidColorBrush(Colors.White),
+            FontWeight = FontWeight.Bold,
+            CornerRadius = CornerRadius(8.0)
+        )
+        let btnExport = Button(
+            Content = "[Scenario 6] Export under LUT/Bond (POS 96 Zero-Rated)",
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            Padding = Thickness(14.0, 10.0),
+            Background = SolidColorBrush(Color.Parse("#0D9488")),
+            Foreground = SolidColorBrush(Colors.White),
+            FontWeight = FontWeight.Bold,
+            CornerRadius = CornerRadius(8.0)
+        )
+
         leftStack.Children.Add(btnValid)
         leftStack.Children.Add(btnRcm)
         leftStack.Children.Add(btnPosFail)
         leftStack.Children.Add(btnRoundFail)
+        leftStack.Children.Add(btnSez)
+        leftStack.Children.Add(btnExport)
 
         let badgeStatus = TextBlock(
             Text = "STATUS: SELECT SCENARIO ABOVE",
@@ -466,6 +487,31 @@ type MainWindow() as this =
                 Irn = Some validIrn64; ReverseCharge = Some "N"; Seller = validSeller; Buyer = Some validBuyer; Items = [ item ]
             }
             runAudit inv "Scenario 4: Section 170 Rounding Anomaly (Fractional Rupee Total)" |> ignore
+        )
+
+        // Scenario 5: SEZ Zero-Rated Supply (Section 7(5)(b))
+        btnSez.Click.Add(fun _ ->
+            let sezBuyer = { validBuyer with StateCode = "29"; IsSez = Some true }
+            let tax = { Igst = 45000.0m; Cgst = 0.0m; Sgst = 0.0m; Cess = None }
+            let item = { Hsn = "84713010"; TaxableValue = 250000.0m; GstRate = 18.0m; CessRate = None; Tax = tax }
+            let inv = {
+                DocumentType = Some "INV"; InvoiceNumber = "INV-2026-SEZ-01"; InvoiceDate = "2026-07-14"
+                PlaceOfSupply = Some "29"; OriginalInvoiceNumber = None; OriginalInvoiceDate = None
+                Irn = Some validIrn64; ReverseCharge = Some "N"; Seller = validSeller; Buyer = Some sezBuyer; Items = [ item ]
+            }
+            runAudit inv "Scenario 5: SEZ Zero-Rated Supply (Sec 7(5)(b) — Intra-State SEZ Evaluated as Interstate)" |> ignore
+        )
+
+        // Scenario 6: Export under LUT/Bond (POS 96 Zero-Rated)
+        btnExport.Click.Add(fun _ ->
+            let tax = { Igst = 0.0m; Cgst = 0.0m; Sgst = 0.0m; Cess = None }
+            let item = { Hsn = "84713010"; TaxableValue = 500000.0m; GstRate = 0.0m; CessRate = None; Tax = tax }
+            let inv = {
+                DocumentType = Some "INV"; InvoiceNumber = "INV-2026-EXP-96"; InvoiceDate = "2026-07-14"
+                PlaceOfSupply = Some "96"; OriginalInvoiceNumber = None; OriginalInvoiceDate = None
+                Irn = Some validIrn64; ReverseCharge = Some "N"; Seller = validSeller; Buyer = None; Items = [ item ]
+            }
+            runAudit inv "Scenario 6: Export under LUT/Bond (Section 16 IGST Act — POS 96 Zero-Rated)" |> ignore
         )
 
         // Generate CFF Compliance Container Manifest
