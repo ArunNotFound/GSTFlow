@@ -53,3 +53,24 @@ let compileInvoice (jsonString: string) (hash: string) : obj =
             violations = [||]
             error = err
         |} |> box
+
+let routeNaturalLanguageSql (prompt: string) : obj =
+    let res = SqlInference.routePromptToDuckDbSql prompt
+    {|
+        prompt = res.Prompt
+        emittedSql = res.EmittedSql
+        executionEngine = res.ExecutionEngine
+        gbnfGrammarApplied = res.GbnfGrammarApplied
+        estimatedLatencyMs = res.EstimatedLatencyMs
+        explanation = res.Explanation
+    |} |> box
+
+let decodeOfflineQr (base64Payload: string) : obj =
+    let decoded = QrDecoder.decodeOfflineQr base64Payload
+    {|
+        sellerGstin = decoded.SellerGstin
+        buyerGstin = decoded.BuyerGstin
+        documentNumber = decoded.InvoiceNumber
+        totalValue = decoded.TotalValue
+        irnHash = decoded.IrnHash
+    |} |> box

@@ -149,3 +149,10 @@ module GoldCorpusTests =
         Assert.True(exportEval.IsZeroRated)
         Assert.Equal("96", exportEval.EffectivePos)
         Assert.Equal(StatutorySupplyCategory.ExportUnderLut, exportEval.Category)
+
+    [<Fact>]
+    let ``Stunt 8 - GBNF Constrained DuckDB Parquet SQL Inference: Routes natural language to cold-start vectorized SQL`` () =
+        let outcome = SqlInference.routePromptToDuckDbSql "Check Section 170 rounding anomalies on invoices"
+        Assert.True(outcome.GbnfGrammarApplied)
+        Assert.Contains("read_parquet('verdicts.parquet')", outcome.EmittedSql)
+        Assert.Contains("SEC_170_ROUNDING", outcome.EmittedSql)

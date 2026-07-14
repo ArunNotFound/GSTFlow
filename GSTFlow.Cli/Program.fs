@@ -214,9 +214,12 @@ let main argv =
             printfn "IRN Hash: %s\n" decoded.IrnHash
 
             printfn ">>> TAB 4: GEMMA E2B • GBNF GRAMMAR-CONSTRAINED SQL OVER PARQUET/AVRO <<<"
-            printfn "Prompt: Run Anomaly Check on GSTIN 29AAACR Across Q1-Q3"
-            printfn "Emitted DuckDB SQL (Zero-Ingestion Cold-Start Vectorized Query over .cff Parquet):\nSELECT InvoiceNumber, InvoiceDate, RuleId, BlockedReason, TotalTax\nFROM read_parquet('FY26_Q2_Invoices.cff/verdicts.parquet')\nWHERE SellerGstin = '29AAACR5055K1Z5'\n  AND FinancialQuarter IN ('Q1', 'Q2', 'Q3')\nORDER BY InvoiceDate DESC;\n"
-            printfn "Execution Speed: 0.8 ms (Direct Vectorized Cold-Start — 0 Database Server Ingestion Overhead)\n"
+            let inferred = SqlInference.routePromptToDuckDbSql "Check Section 170 rounding anomalies on invoices"
+            printfn "Prompt: %s" inferred.Prompt
+            printfn "Execution Engine: %s" inferred.ExecutionEngine
+            printfn "Emitted DuckDB SQL (Zero-Ingestion Cold-Start Vectorized Query over read_parquet):\n%s\n" inferred.EmittedSql
+            printfn "Explanation: %s" inferred.Explanation
+            printfn "Execution Speed: %.2f ms (Direct Vectorized Cold-Start — 0 Database Server Ingestion Overhead)\n" inferred.EstimatedLatencyMs
             printfn "=========================================================================="
             printfn "                  ALL 4 TABS & 6 SCENARIOS VERIFIED OK                   "
             printfn "=========================================================================="

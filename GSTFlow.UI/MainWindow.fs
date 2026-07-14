@@ -495,53 +495,51 @@ type MainWindow() as this =
         )
 
         // Phase 3: Edge AI Prompt Events
+        // Phase 3 & 4A: Edge AI Prompt Events (Live GBNF Constrained DuckDB Parquet SQL Inference)
         btnPrompt1.Click.Add(fun _ ->
+            let res = SqlInference.routePromptToDuckDbSql "Explain Section 170 Rounding Warning on INV-ROUND-01"
             let lines = [
-                "=== GEMMA E2B • FORENSIC TAX STATUTORY EXPLANATION ==="
-                "Prompt: Explain Section 170 Rounding Warning on INV-ROUND-01"
+                "=== GEMMA E2B • GBNF GRAMMAR-CONSTRAINED SQL OVER PARQUET/AVRO ==="
+                sprintf "Prompt: %s" res.Prompt
+                sprintf "Execution Engine: %s" res.ExecutionEngine
                 "-------------------------------------------------------"
-                "FORENSIC ANALYSIS:"
-                "Under Section 170 of the CGST Act, the total amount payable on a tax invoice"
-                "must be rounded to the nearest Rupee integer. On invoice INV-2026-ROUND-01,"
-                "the calculated Grand Total is ₹295,000.45. Because ₹0.45 fractional paise remains"
-                "unrounded, GSTFlow flagged a statutory warning under RULE_SEC_170_ROUNDING."
-                ""
-                "RECOMMENDED ACTION: Emit a ₹0.45 rounding adjustment line item."
+                "EMITTED DUCKDB SQL (Zero Hallucination Guarantee over read_parquet):"
+                res.EmittedSql
+                "-------------------------------------------------------"
+                sprintf "Explanation: %s" res.Explanation
+                sprintf "Execution Speed: %.2f ms (Direct Vectorized Cold-Start)" res.EstimatedLatencyMs
             ]
             aiBox.Text <- String.Join("\n", lines)
         )
 
         btnPrompt2.Click.Add(fun _ ->
+            let res = SqlInference.routePromptToDuckDbSql "Check Section 9(3) Reverse Charge Mechanism (RCM) compliance"
             let lines = [
-                "=== GEMMA E2B • GBNF GRAMMAR-CONSTRAINED SQL GENERATION ==="
-                "Prompt: Run Anomaly Check on GSTIN 29AAACR Across Q1-Q3"
-                "Semantic Router Destination: v_statutory_violations"
+                "=== GEMMA E2B • GBNF GRAMMAR-CONSTRAINED SQL OVER PARQUET/AVRO ==="
+                sprintf "Prompt: %s" res.Prompt
+                sprintf "Execution Engine: %s" res.ExecutionEngine
                 "-------------------------------------------------------"
-                "EMITTED DUCKDB SQL (Zero Hallucination Guarantee):"
-                "SELECT InvoiceNumber, InvoiceDate, RuleId, BlockedReason, TotalTax"
-                "FROM v_statutory_violations"
-                "WHERE SellerGstin = '29AAACR5055K1Z5'"
-                "  AND FinancialQuarter IN ('Q1', 'Q2', 'Q3')"
-                "ORDER BY InvoiceDate DESC;"
+                "EMITTED DUCKDB SQL (Zero Hallucination Guarantee over read_parquet):"
+                res.EmittedSql
                 "-------------------------------------------------------"
-                "EXECUTION SPEED: 1.4 ms (DuckDB Direct Parquet/Avro Query)"
+                sprintf "Explanation: %s" res.Explanation
+                sprintf "Execution Speed: %.2f ms (Direct Vectorized Cold-Start)" res.EstimatedLatencyMs
             ]
             aiBox.Text <- String.Join("\n", lines)
         )
 
         btnPrompt3.Click.Add(fun _ ->
+            let res = SqlInference.routePromptToDuckDbSql "Verify SEZ Section 7(5)(b) and Section 16 Zero-Rated export supplies"
             let lines = [
-                "=== GEMMA E2B • GBNF GRAMMAR-CONSTRAINED SQL GENERATION ==="
-                "Prompt: Find Purchase Invoices Flagged for Sec 17(5) Blocked ITC"
-                "Semantic Router Destination: v_itc_inward"
+                "=== GEMMA E2B • GBNF GRAMMAR-CONSTRAINED SQL OVER PARQUET/AVRO ==="
+                sprintf "Prompt: %s" res.Prompt
+                sprintf "Execution Engine: %s" res.ExecutionEngine
                 "-------------------------------------------------------"
-                "EMITTED DUCKDB SQL (Zero Hallucination Guarantee):"
-                "SELECT InvoiceNumber, SellerGstin, TaxableValue, TotalTax, BlockedSection"
-                "FROM v_itc_inward"
-                "WHERE IsItcEligible = FALSE"
-                "  AND BlockedSection = 'SEC_17_5';"
+                "EMITTED DUCKDB SQL (Zero Hallucination Guarantee over read_parquet):"
+                res.EmittedSql
                 "-------------------------------------------------------"
-                "RESULT SUMMARY: Identified 3 ineligible motor vehicle / catering invoices."
+                sprintf "Explanation: %s" res.Explanation
+                sprintf "Execution Speed: %.2f ms (Direct Vectorized Cold-Start)" res.EstimatedLatencyMs
             ]
             aiBox.Text <- String.Join("\n", lines)
         )
