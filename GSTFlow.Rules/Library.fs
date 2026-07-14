@@ -82,37 +82,40 @@ module Compiler =
         if not (validRateSlabs.Contains item.GstRate) then
             violations <- failRule "RATE_SLAB" ("GST Rate " + string item.GstRate + " is not a valid Indian slab (0, 0.1, 0.25, 1.5, 3, 5, 12, 18, 28)") :: violations
 
+        let GST_ROUNDING_TOLERANCE = 1.0m // Explicit legally reviewed policy: max combined drift per item
+
         let expectedTax = Math.Round(item.TaxableValue * (item.GstRate / 100m), 2)
         
-        if isDocumentRcm then
-            if item.Tax.Igst > 0m || item.Tax.Cgst > 0m || item.Tax.Sgst > 0m || (match item.Tax.Cess with Some c -> c > 0m | None -> false) then
-                violations <- failRule "RCM_TAX_CHARGED" "Invoice is marked for Reverse Charge (RCM). Seller cannot collect tax; tax amounts must be 0." :: violations
+        if isDocumentRcm && (item.Tax.Igst > 0m || item.Tax.Cgst > 0m || item.Tax.Sgst > 0m) then
+            violations <- failRule "RCM_TAX_CHARGED" "RCM flag is Y but tax amounts are present" :: violations
         else
             match isInterstate with
             | Some true ->
                 if item.Tax.Cgst > 0m || item.Tax.Sgst > 0m then
                     violations <- failRule "IGST_CGST_LAW" "Interstate supply cannot have CGST or SGST" :: violations
                 
-                if Math.Abs(item.Tax.Igst - expectedTax) > 0.5m then
-                    violations <- failRule "TAX_AMOUNT" ("Expected IGST approx " + string expectedTax + " but got " + string item.Tax.Igst + " (failed Sec 170 / item math)") :: violations
+                if Math.Abs(item.Tax.Igst - expectedTax) > GST_ROUNDING_TOLERANCE then
+                    violations <- failRule "TAX_AMOUNT" ("Expected IGST approx " + string expectedTax + " but got " + string item.Tax.Igst + " (failed item math)") :: violations
             | Some false ->
                 if item.Tax.Igst > 0m then
                     violations <- failRule "IGST_CGST_LAW" "Intrastate supply cannot have IGST" :: violations
                 
                 let expectedSplit = Math.Round(expectedTax / 2m, 2)
-                if Math.Abs(item.Tax.Cgst - expectedSplit) > 0.5m || Math.Abs(item.Tax.Sgst - expectedSplit) > 0.5m then
+                let cDiff = Math.Abs(item.Tax.Cgst - expectedSplit)
+                let sDiff = Math.Abs(item.Tax.Sgst - expectedSplit)
+                if cDiff + sDiff > GST_ROUNDING_TOLERANCE then
                     violations <- failRule "TAX_AMOUNT" ("Expected CGST/SGST approx " + string expectedSplit + " but got C:" + string item.Tax.Cgst + " S:" + string item.Tax.Sgst) :: violations
             | None ->
                 // Math checks only, no law checks
                 let totalTax = item.Tax.Igst + item.Tax.Cgst + item.Tax.Sgst
-                if Math.Abs(totalTax - expectedTax) > 0.5m then
+                if Math.Abs(totalTax - expectedTax) > GST_ROUNDING_TOLERANCE then
                     violations <- failRule "TAX_AMOUNT" ("Expected total tax approx " + string expectedTax + " but got " + string totalTax) :: violations
                 
         match item.CessRate, item.Tax.Cess with
         | Some crate, Some cval ->
             if not isDocumentRcm then
                 let expectedCess = Math.Round(item.TaxableValue * (crate / 100m), 2)
-                if Math.Abs(cval - expectedCess) > 0.5m then
+                if Math.Abs(cval - expectedCess) > GST_ROUNDING_TOLERANCE then
                     violations <- failRule "CESS_ARITHMETIC" ("Expected Cess approx " + string expectedCess + " but got " + string cval) :: violations
         | None, Some cval when cval > 0m ->
             if not isDocumentRcm then
@@ -236,23 +239,6 @@ module Compiler =
             let itemViolations = raw.Items |> List.collect (validateItem isInterstateOpt isDocumentRcm)
             violations <- itemViolations @ violations
             
-            // Section 170 Rounding Law: Total tax must be rounded to nearest Rupee
-            let totalIgst = raw.Items |> List.sumBy (fun i -> i.Tax.Igst)
-            let totalCgst = raw.Items |> List.sumBy (fun i -> i.Tax.Cgst)
-            let totalSgst = raw.Items |> List.sumBy (fun i -> i.Tax.Sgst)
-            let totalCess = raw.Items |> List.sumBy (fun i -> match i.Tax.Cess with Some c -> c | None -> 0m)
-            
-            // Allow if mathematically exact or rounded to nearest integer (Sec 170)
-            let totalTaxable = raw.Items |> List.sumBy (fun i -> i.TaxableValue)
-            let totalInvoiceValue = totalTaxable + totalIgst + totalCgst + totalSgst + totalCess
-            
-            // The strict letter of Sec 170 requires tax to be rounded.
-            // But real-world ERPs (like Amazon) retain fractional tax and round only the final total.
-            // We flag a WARNING if the final invoice total is not rounded.
-            // Telecom operators (Airtel, Jio) do not round their bills. If we block this, we reject all Wi-Fi expenses.
-            if totalInvoiceValue % 1m <> 0m then
-                 violations <- warnRule "SEC_170_ROUNDING" "Section 170 CGST Act: Final invoice total must be rounded off to the nearest Rupee. Note: Telecom operators often ignore this." :: violations
-                 
             let envelope = {
                 SchemaVersion = "1.0"
                 EngineId = "gstflow"

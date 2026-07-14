@@ -66,36 +66,7 @@ module CffPackager =
         )
 
     let generateCffManifestJson (invoice: RawInvoice) (envelope: VerdictEnvelope) =
-        let invJson = sprintf "{\"InvoiceNumber\":\"%s\",\"Date\":\"%s\",\"SupplyType\":\"B2B\",\"Taxable\":%M}" invoice.InvoiceNumber invoice.InvoiceDate (invoice.Items |> List.sumBy (fun i -> i.TaxableValue))
-        let payloadDigest = sha256 invJson
-        let verdictsDigest = sha256 (envelope.OverallOutcome.ToString())
-        let rulePackDigest = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-        sprintf """{
-  "cff_version": "2.1.0-coldstart",
-  "engine_id": "%s-%s",
-  "created_at": "%s",
-  "storage_engine": "Apache Parquet / Avro (Zero-Ingestion Cold-Start)",
-  "rule_pack_hash": "%s",
-  "payload_digest": "%s",
-  "files": [
-    {
-      "name": "invoices.parquet",
-      "format": "PARQUET",
-      "compression": "ZSTD",
-      "sha256": "%s",
-      "logical_precision": "DECIMAL(28,4)",
-      "cold_start_queryable": true
-    },
-    {
-      "name": "verdicts.parquet",
-      "format": "PARQUET",
-      "compression": "ZSTD",
-      "sha256": "%s",
-      "overall_outcome": "%A",
-      "cold_start_queryable": true
-    }
-  ]
-}"""            envelope.EngineId envelope.EngineVersion (DateTime.UtcNow.ToString("O")) rulePackDigest payloadDigest payloadDigest verdictsDigest envelope.OverallOutcome
+        failwith "NotImplemented: Real CFF ZIP/Parquet generation and payload digest is planned for Gate 4 (P0.5 finding)"
 
 module QrDecoder =
     type DecodedQrPayload = {
@@ -110,13 +81,4 @@ module QrDecoder =
     }
 
     let decodeOfflineQr (rawPayload: string) : DecodedQrPayload =
-        {
-            SellerGstin = "29AAACR5055K1Z5"
-            BuyerGstin = "27AAACT8814B1Z2"
-            InvoiceNumber = "INV-2026-8842"
-            InvoiceDate = "2026-07-10"
-            TotalValue = 295000.0000m
-            MainHsnCode = "84713010"
-            IrnHash = "8f434346648f6b96df89dda901c5176b10a6d83961dd3c1ac88b59b2dc327aa4"
-            SignatureVerified = true
-        }
+        failwith "NotImplemented: QR Signature Verification requires real NIC payload parser and cert chain (P0.6 finding)"

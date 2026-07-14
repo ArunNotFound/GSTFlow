@@ -9,7 +9,11 @@ type StateCode = string
 
 module Verification =
     type RuleConfidence = Exact | Derived | Guessed
-    type RuleOutcome = Pass | Warning | Fail | Unknown
+    type RuleOutcome =
+    | Pass
+    | Warning
+    | Unknown
+    | Fail
 
     type RuleMetadata = {
         RuleId: string

@@ -48,12 +48,5 @@ module NativeColumnar =
 
         batch
 
-    /// Simulates emitting the physical Apache Parquet / Avro binary file bytes 
-    /// from the NativeColumnarBatch memory layout.
     let emitParquetBinaryBytes (batch: NativeColumnarBatch) : byte[] =
-        // In a production C/C++ DuckDB deployment, we pass the NativeColumnarBatch pointers 
-        // directly to the DuckDB Appender or Arrow C-Data interface.
-        // Here we simulate the physical Parquet file generation.
-        let header = Encoding.UTF8.GetBytes("PAR1")
-        let footer = Encoding.UTF8.GetBytes("PAR1")
-        Array.concat [ header; [| 0uy; 1uy; 2uy |]; footer ]
+        failwith "NotImplemented: Parquet emission requires an actual Apache Arrow/Parquet library. (P0.5 finding)"
